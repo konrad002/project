@@ -97,16 +97,26 @@ class newWindow(QMainWindow):
            
             
             def update_label(message):
-                    text = str(messagesSent[-1])
+                    
                     label = QLabel(message)
                     
                     print(message)
                     for user, msg in messagesSent:
                         if(user == "User 2"):
-                            label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px;")
+                             message_layout = QHBoxLayout()
+                             
+                             newLabel = QLabel("Temporary name")
+                             newLabel.setStyleSheet("padding: 5px;")
+                             label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
+                             self.client.addLayout(message_layout)
                         elif(user == "User 1"):
-                             label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px;")
+                            message_layout = QHBoxLayout()
+                            newLabel = QLabel("Anonymous")
+                            
+                            newLabel.setStyleSheet("padding-right 10px;")
+                            label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                     self.client.addWidget(label)
+                    self.client.addWidget(newLabel)
 
             def send(message):
                   messagesSent.append(("User 1", message))

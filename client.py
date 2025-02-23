@@ -14,6 +14,8 @@ class window(QWidget):
         
         
         self.mainlabel = QLabel("Client login ")
+        self.username = QLabel("Enter your username")
+        self.textbox3 = QLineEdit(self)
         self.label2 = QLabel("Enter IP and port number to connect")
         self.textbox1 = QLineEdit(self)
         self.textbox1.setPlaceholderText("Type IP address")
@@ -23,10 +25,12 @@ class window(QWidget):
         self.button2 = QPushButton('Go back')
         def on_click():
             alert = QMessageBox()
-            global s
+            global s, username_input
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.textbox1.text(), int(self.textbox2.text())))
-                
+            
+            username_input = self.textbox3.text()
+            
             print("connected to server")
                 
             self.close()
@@ -42,11 +46,16 @@ class window(QWidget):
                     
             
         self.layout = QVBoxLayout()
+        self.layout.addWidget(self.username)
+        self.layout.addWidget(self.textbox3)
         self.layout.addWidget(self.label2)
         self.layout.addWidget(self.textbox1)
         self.layout.addWidget(self.textbox2)
         self.layout.addWidget(self.button)
+        
+       
         self.button.clicked.connect(on_click)
+        
         self.setLayout(self.layout)
         
 
@@ -61,16 +70,31 @@ class newWindow(QMainWindow):
             
             
             def update_label(message):
-                    text = str(messagesSent[-1])
+                    
                     label = QLabel(message)
                     
                     print(message)
+                    
                     for user, msg in messagesSent:
                         if(user == "User 1"):
-                            label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px;")
+                            
+                            message_layout = QHBoxLayout()
+                            newLabel = QLabel("Anonymous")
+                            label.setWordWrap(True)
+                            newLabel.setStyleSheet("padding-right 10px;")
+                            label.setStyleSheet("background-color: lightgray; padding: 5px; border-radius: 5px; height: 40px;")
+                            message_layout.addStretch()
+                            self.client.addLayout(message_layout)
                         elif(user == "User 2"):
-                             label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px;")
+                             message_layout = QHBoxLayout()
+                             
+                             newLabel = QLabel(username_input)
+                             newLabel.setStyleSheet("padding: 5px;")
+                             label.setStyleSheet("background-color: lightgreen; padding: 5px; border-radius: 5px; height: 50px;")
+                             self.client.addLayout(message_layout)
                     self.client.addWidget(label)
+                    self.client.addWidget(newLabel)
+                    
                     
                     
                 
@@ -79,7 +103,7 @@ class newWindow(QMainWindow):
             self.setWindowTitle("Client app")
             navbar = self.menuBar()
             self.label19 = QLabel("Client messenger ")
-            username = navbar.addMenu("Username")
+            username = navbar.addMenu(username_input)
             exit = QAction("Exit", self)
             def send(message):
                 
