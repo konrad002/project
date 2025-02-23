@@ -4,7 +4,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import select
-HOST = "0.0.0.0"
+
+hostname = str(socket.gethostname())
+HOST = socket.gethostbyname(hostname)
+
 PORT = 12345
 messagesSent = []
 
@@ -39,7 +42,12 @@ class window(QWidget):
         self.resize(1000, 1000)
         self.setWindowTitle("Please wait for connection")
         
-        self.label17 = QLabel("Please await for client to connect")
+        self.label17 = QLabel("Please wait for client to connect")
+        self.ip = QLabel("Connect to this IP!")
+        self.ip2 = QLabel(HOST)
+        self.ip2.setFont(QFont('Montserrat', 20))
+        
+        self.ip.setFont(QFont('Arial', 20))
         self.label17.move(200,200)
         self.label17.setFont(QFont('Arial', 20))
       
@@ -55,7 +63,14 @@ class window(QWidget):
       
         layout = QVBoxLayout()
         layout.addWidget(self.label17)
+        self.label17.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.ip)
+        self.ip.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.ip2)
+        self.ip2.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.image)
+        self.image.setScaledContents(True)
+        
         self.setLayout(layout)
         
         

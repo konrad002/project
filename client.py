@@ -6,7 +6,7 @@ from PyQt5.QtCore import pyqtSignal
 
 messagesSent = []
 
-
+layout = QVBoxLayout()
 class window(QWidget):
     def __init__(self):
         super().__init__()
@@ -29,7 +29,7 @@ class window(QWidget):
                 
             print("connected to server")
                 
-            self.close()
+            
             self.client = newWindow()
             self.client.show()
                 
@@ -41,7 +41,7 @@ class window(QWidget):
             
                     
             
-        layout = QVBoxLayout()
+        
         layout.addWidget(self.label2)
         layout.addWidget(self.textbox1)
         layout.addWidget(self.textbox2)
@@ -58,19 +58,17 @@ class newWindow(QMainWindow):
       def __init__(self):
             
             super().__init__()
-            self.layout = QVBoxLayout()
-            self.setLayout(self.layout)
+            
             
             def update_label(message):
                     text = str(messagesSent[-1])
                     label = QLabel(message)
-                    
+                    layout.addWidget(label)
                     print(message)
                     label.setGeometry(500, 600, 500, 300)
                     label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px;")
-                    label.show()
-                    self.repaint()
-                    QApplication.processEvents()
+                    
+                    
                     
                 
 
