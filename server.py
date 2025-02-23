@@ -95,23 +95,34 @@ class newWindow(QMainWindow):
             self.button7 = QPushButton("Send",self)
             self.button7.setGeometry(50, 50, 50, 50)
             
-            
+            def update_label(message):
+                    text = str(messagesSent[-1])
+                    label = QLabel(message)
+                    
+                    print(message)
+                    for user, msg in messagesSent:
+                        if(user == "User 2"):
+                            label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px;")
+                        elif(user == "User 1"):
+                             label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px;")
+                    self.client.addWidget(label)
 
             def send(message):
-                  messagesSent.append(message)
+                  messagesSent.append(("User 1", message))
                   conn.sendall(bytes(message, encoding='utf8'))
                   print(messagesSent)
             def receive():
                   while True:
                         ready, _, _ = select.select([s], [], [], 0.5)
                         if(ready):
-                              data = conn.recv(1024)
+                              data = s.recv(1024)
                               
                               if(not data):
                                     print("disconnected")
                                     break
                               print(data)
-                              messagesSent.append(data)
+                              message = data.decode("utf-8")
+                              messagesSent.append(("User 2", message))
                               print(messagesSent)
             
 

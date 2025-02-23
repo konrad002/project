@@ -6,7 +6,7 @@ from PyQt5.QtCore import pyqtSignal
 
 messagesSent = []
 
-layout = QVBoxLayout()
+
 class window(QWidget):
     def __init__(self):
         super().__init__()
@@ -29,7 +29,7 @@ class window(QWidget):
                 
             print("connected to server")
                 
-            
+            self.close()
             self.client = newWindow()
             self.client.show()
                 
@@ -41,13 +41,13 @@ class window(QWidget):
             
                     
             
-        
-        layout.addWidget(self.label2)
-        layout.addWidget(self.textbox1)
-        layout.addWidget(self.textbox2)
-        layout.addWidget(self.button)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.label2)
+        self.layout.addWidget(self.textbox1)
+        self.layout.addWidget(self.textbox2)
+        self.layout.addWidget(self.button)
         self.button.clicked.connect(on_click)
-        self.setLayout(layout)
+        self.setLayout(self.layout)
         
 
 
@@ -63,11 +63,14 @@ class newWindow(QMainWindow):
             def update_label(message):
                     text = str(messagesSent[-1])
                     label = QLabel(message)
-                    layout.addWidget(label)
-                    print(message)
-                    label.setGeometry(500, 600, 500, 300)
-                    label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px;")
                     
+                    print(message)
+                    for user, msg in messagesSent:
+                        if(user == "User 1"):
+                            label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px;")
+                        elif(user == "User 2"):
+                             label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px;")
+                    self.client.addWidget(label)
                     
                     
                 
@@ -79,7 +82,7 @@ class newWindow(QMainWindow):
             username = navbar.addMenu("Username")
             exit = QAction("Exit", self)
             def send(message):
-                messagesSent.append(message)
+                messagesSent.append(("User 2", message))
                 s.sendall(bytes(message, encoding='utf8'))
                 print(messagesSent)
                 self.new_signal.emit(message)
@@ -96,7 +99,7 @@ class newWindow(QMainWindow):
                             break
                         
                         message = data.decode("utf-8")
-                        messagesSent.append(message)
+                        messagesSent.append(("User 1", message))
                         print(messagesSent)
                         self.new_signal.emit(message)
                         
@@ -108,15 +111,21 @@ class newWindow(QMainWindow):
             
                     
              
-           
+            central = QWidget()
+            self.setCentralWidget(central)
+            self.client = QVBoxLayout()
             self.message = QLineEdit(self)
             self.message.setGeometry(100, 500, 500, 100)
             self.button7 = QPushButton("Send",self)
             self.button7.setGeometry(50, 50, 50, 50)
             r = self.button7.clicked.connect(lambda: send(self.message.text()))
+            self.client.addWidget(self.message)
+            self.client.addWidget(self.button7)
+            self.button7.setStyleSheet("border-radius: 10px;")
+            central.setLayout(self.client)
+
             
             
-            self.show()
             
 
 
