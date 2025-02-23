@@ -82,8 +82,12 @@ class newWindow(QMainWindow):
             username = navbar.addMenu("Username")
             exit = QAction("Exit", self)
             def send(message):
+                
                 messagesSent.append(("User 2", message))
                 s.sendall(bytes(message, encoding='utf8'))
+                print(message, 2421841)
+                print(s.getsockname())
+                print("does this get run here?")
                 print(messagesSent)
                 self.new_signal.emit(message)
       
@@ -92,8 +96,10 @@ class newWindow(QMainWindow):
             def receive():
                  while True:
                     ready, _, _ = select.select([s], [], [], 0.5)
+                    print(ready)
                     if(ready):
                         data = s.recv(1024)
+
                         if(not data):
                             print("disconnected")
                             break

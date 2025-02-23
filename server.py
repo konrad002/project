@@ -10,20 +10,22 @@ HOST = socket.gethostbyname(hostname)
 
 PORT = 12345
 messagesSent = []
-
+conn = None
 def connect():
             print("are we even here?")
             print("are we here?")
-            global s
+            
+            global s, conn
+            
             s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
             s.bind((HOST, PORT))
             s.listen(2)
             
             
             while True:
-                  global conn
-                  conn, addr = s.accept()
                   
+                  conn, addr = s.accept()
+                  print(conn)
                   print("connected to", addr)
                   
                   
@@ -79,10 +81,11 @@ class window(QWidget):
         
 
 class newWindow(QMainWindow):
+      new_signal = pyqtSignal(str)
       def __init__(self):
             super().__init__()
             
-
+            
             self.resize(1000,1000)
             self.setWindowTitle("Server app")
             navbar = self.menuBar()
@@ -90,10 +93,8 @@ class newWindow(QMainWindow):
             username = navbar.addMenu("Username")
             exit = QAction("Exit", self)
             exit.triggered.connect(self.close)
-            self.message = QLineEdit(self)
-            self.message.setGeometry(100, 500, 500, 100)
-            self.button7 = QPushButton("Send",self)
-            self.button7.setGeometry(50, 50, 50, 50)
+            
+           
             
             def update_label(message):
                     text = str(messagesSent[-1])
@@ -111,12 +112,22 @@ class newWindow(QMainWindow):
                   messagesSent.append(("User 1", message))
                   conn.sendall(bytes(message, encoding='utf8'))
                   print(messagesSent)
+                  self.new_signal.emit(message)
+            
+            self.new_signal.connect(update_label)
             def receive():
+                  global conn
+
                   while True:
-                        ready, _, _ = select.select([s], [], [], 0.5)
+                        if conn == None:
+                              continue
+
+                        ready, _, _ = select.select([conn], [], [], 0.5)
+                        print(ready, "line 119")
+                        
                         if(ready):
-                              data = s.recv(1024)
-                              
+                              data = conn.recv(1024)
+                              print("this has been run")
                               if(not data):
                                     print("disconnected")
                                     break
@@ -124,14 +135,25 @@ class newWindow(QMainWindow):
                               message = data.decode("utf-8")
                               messagesSent.append(("User 2", message))
                               print(messagesSent)
+                              self.new_signal.emit(message)
+                              print("what about this?")
             
 
             thread2 = threading.Thread(target=receive, daemon = True)
             thread2.start()
 
-            rf = self.button7.clicked.connect(lambda: send(self.message.text()))
-            print(rf, "line 83")
-            self.show()
+            central = QWidget()
+            self.setCentralWidget(central)
+            self.client = QVBoxLayout()
+            self.message = QLineEdit(self)
+            self.message.setGeometry(100, 500, 500, 100)
+            self.button7 = QPushButton("Send",self)
+            self.button7.setGeometry(50, 50, 50, 50)
+            self.button7.clicked.connect(lambda: send(self.message.text()))
+            self.client.addWidget(self.message)
+            self.client.addWidget(self.button7)
+            self.button7.setStyleSheet("border-radius: 10px;")
+            central.setLayout(self.client)
             
 
 thread = threading.Thread(target=connect, daemon = True)
