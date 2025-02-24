@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import select
+import keyboard
 
 hostname = str(socket.gethostname())
 HOST = socket.gethostbyname(hostname)
@@ -26,6 +27,7 @@ def connect():
                   
                   conn, addr = s.accept()
                   print(conn)
+                  
                   print("connected to", addr)
                   
                   
@@ -35,9 +37,10 @@ def connect():
 
 class window(QWidget):
     def __init__(self):
-        super().__init__()
         
+        super().__init__()
         self.client_socket = None
+        
         
        
         
@@ -58,8 +61,6 @@ class window(QWidget):
         self.label19 = QLabel(self)
         self.image.setPixmap(pixelmap)
         
-        
-        
         def set_username():
             alert = QMessageBox()
             alert.setText("Enter your username")
@@ -76,20 +77,38 @@ class window(QWidget):
             
                   
         set_username()
-        layout = QVBoxLayout()
-        layout.addWidget(self.label17)
+       
+
+        
+        
+        
+        
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.label17)
         self.label17.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.ip)
+        self.layout.addWidget(self.ip)
         self.ip.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.ip2)
+        self.layout.addWidget(self.ip2)
         self.ip2.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.image)
+        self.layout.addWidget(self.image)
         self.image.setScaledContents(True)
         
-        self.setLayout(layout)
+
         
-        
-      
+        self.setLayout(self.layout)
+
+        def on_load():
+            print("??????????")
+            
+            print("does this get run?")
+            self.close()
+            self.client_socket = newWindow()
+            print("or this?")
+            self.client_socket.show()
+            self.close()
+            
+            print("what about this?")
+        on_load()
 
         
 
@@ -98,16 +117,14 @@ class newWindow(QMainWindow):
       def __init__(self):
             super().__init__()
             
-                        
-           
+            print("here")
             self.resize(1000,1000)
             self.setWindowTitle("Server app")
             navbar = self.menuBar()
             
             username = navbar.addMenu("Username")
-            exit = QAction("Exit", self)
-            exit.triggered.connect(self.close)
             
+           
            
             
             def update_label(message):
@@ -133,9 +150,13 @@ class newWindow(QMainWindow):
                     self.client.addWidget(newLabel)
 
             def send(message):
+                  if(message == ""):
+                        return
                   messagesSent.append(("User 1", message))
+                  
                   conn.sendall(bytes(message, encoding='utf8'))
                   print(messagesSent)
+                  self.message.setText("")
                   self.new_signal.emit(message)
             
             self.new_signal.connect(update_label)
@@ -170,14 +191,17 @@ class newWindow(QMainWindow):
             self.setCentralWidget(central)
             self.client = QVBoxLayout()
             self.message = QLineEdit(self)
-            self.message.setGeometry(100, 500, 500, 100)
+            
             self.button7 = QPushButton("Send",self)
+            self.message.setPlaceholderText("Type in a message to send")
             self.button7.setGeometry(50, 50, 50, 50)
             self.button7.clicked.connect(lambda: send(self.message.text()))
             self.client.addWidget(self.message)
             self.client.addWidget(self.button7)
             self.button7.setStyleSheet("border-radius: 10px;")
+            keyboard.on_press_key("Enter", lambda _: send(self.message.text()))
             central.setLayout(self.client)
+
             
 
 thread = threading.Thread(target=connect, daemon = True)
@@ -189,7 +213,7 @@ app = QApplication([])
 
 window = window()
 window.show()
- 
+
 app.exec()
 
 
