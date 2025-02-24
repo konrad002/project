@@ -84,8 +84,11 @@ class newWindow(QMainWindow):
       new_signal = pyqtSignal(str)
       def __init__(self):
             super().__init__()
-            
-            
+            username_input = None
+            if(username_input == None):
+                  alert = QMessageBox()
+                  alert.setText("Enter username")
+                  alert.exec_()
             self.resize(1000,1000)
             self.setWindowTitle("Server app")
             navbar = self.menuBar()
