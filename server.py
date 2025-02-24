@@ -59,10 +59,23 @@ class window(QWidget):
         self.image.setPixmap(pixelmap)
         
         
-        self.close()
-        self.client_socket = newWindow()
-        self.client_socket.show()
-      
+        
+        def set_username():
+            alert = QMessageBox()
+            alert.setText("Enter your username")
+            
+            alert.setWindowTitle("Enter your username")
+            alert.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = alert.exec_()
+            if(returnValue == QMessageBox.Ok and None):
+                  self.close()
+                  self.client_socket = newWindow()
+                  self.client_socket.show()
+            elif(returnValue == QMessageBox.Cancel):
+                  exit()
+            
+                  
+        set_username()
         layout = QVBoxLayout()
         layout.addWidget(self.label17)
         self.label17.setAlignment(Qt.AlignCenter)
@@ -84,11 +97,9 @@ class newWindow(QMainWindow):
       new_signal = pyqtSignal(str)
       def __init__(self):
             super().__init__()
-            username_input = None
-            if(username_input == None):
-                  alert = QMessageBox()
-                  alert.setText("Enter username")
-                  alert.exec_()
+            
+                        
+           
             self.resize(1000,1000)
             self.setWindowTitle("Server app")
             navbar = self.menuBar()
