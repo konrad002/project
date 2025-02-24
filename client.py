@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import *
 import select
 import threading
 from PyQt5.QtCore import pyqtSignal
+import keyboard
 
 messagesSent = []
 
@@ -26,16 +27,28 @@ class window(QWidget):
         def on_click():
             alert = QMessageBox()
             global s, username_input
+            
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((self.textbox1.text(), int(self.textbox2.text())))
             
-            username_input = self.textbox3.text()
             
-            print("connected to server")
-                
-            self.close()
-            self.client = newWindow()
-            self.client.show()
+            try:
+                s.connect((self.textbox1.text(), int(self.textbox2.text())))
+                username_input = self.textbox3.text()
+                self.close()
+                self.client = newWindow()
+                self.client.show()
+                print("connected to server")
+            except Exception:
+                 alert.setText("Wrong IP or port number! ")
+                 alert.setWindowTitle("Error")
+                 alert.setIcon(QMessageBox.Icon.Warning)
+                 alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+                 alert.exec_()
+            
+            
+            
+               
+            
                 
         
                 
@@ -92,6 +105,7 @@ class newWindow(QMainWindow):
                              newLabel.setStyleSheet("padding: 5px;")
                              label.setStyleSheet("background-color: lightgreen; padding: 5px; border-radius: 5px; height: 50px;")
                              self.client.addLayout(message_layout)
+                        
                     self.client.addWidget(label)
                     self.client.addWidget(newLabel)
                     
@@ -103,16 +117,22 @@ class newWindow(QMainWindow):
             self.setWindowTitle("Client app")
             navbar = self.menuBar()
             self.label19 = QLabel("Client messenger ")
-            username = navbar.addMenu(username_input)
+            
+            navbar.addMenu(username_input)
             exit = QAction("Exit", self)
             def send(message):
-                
+                if(message == ""):
+                    return
                 messagesSent.append(("User 2", message))
+                
                 s.sendall(bytes(message, encoding='utf8'))
+                
+
                 print(message, 2421841)
                 print(s.getsockname())
                 print("does this get run here?")
                 print(messagesSent)
+                self.message.setText("")
                 self.new_signal.emit(message)
       
                 
@@ -147,11 +167,13 @@ class newWindow(QMainWindow):
             self.message = QLineEdit(self)
             self.message.setGeometry(100, 500, 500, 100)
             self.button7 = QPushButton("Send",self)
+            self.message.setPlaceholderText("Type in a message to send")
             self.button7.setGeometry(50, 50, 50, 50)
             r = self.button7.clicked.connect(lambda: send(self.message.text()))
             self.client.addWidget(self.message)
             self.client.addWidget(self.button7)
             self.button7.setStyleSheet("border-radius: 10px;")
+            keyboard.on_press_key("Enter", lambda _: send(self.message.text()))
             central.setLayout(self.client)
 
             
