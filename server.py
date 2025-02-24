@@ -1,175 +1,201 @@
 import socket
-from PyQt5.QtWidgets import *
-import select
 import threading
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+import select
 import keyboard
 
+hostname = str(socket.gethostname())
+HOST = socket.gethostbyname(hostname)
+
+PORT = 12345
 messagesSent = []
+conn = None
+def connect():
+            print("are we even here?")
+            print("are we here?")
+            
+            global s, conn
+            
+            s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
+            s.bind((HOST, PORT))
+            s.listen(2)
+            
+            
+            while True:
+                  
+                  conn, addr = s.accept()
+                  print(conn)
+                  
+                  print("connected to", addr)
+                  
+                  
+                  
+            
 
 
 class window(QWidget):
     def __init__(self):
+        
         super().__init__()
-        self.client = None
+        self.client_socket = None
         
-        
-        self.mainlabel = QLabel("Client login ")
-        self.username = QLabel("Enter your username")
-        self.textbox3 = QLineEdit(self)
-        self.label2 = QLabel("Enter IP and port number to connect")
-        self.textbox1 = QLineEdit(self)
-        self.textbox1.setPlaceholderText("Type IP address")
-        self.textbox2 = QLineEdit(self)
-        self.textbox2.setPlaceholderText("Type Port number")
-        self.button = QPushButton('Connect')
-        self.button2 = QPushButton('Go back')
-        def on_click():
-            alert = QMessageBox()
-            global s, username_input
-            
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            
-            
-            try:
-                s.connect((self.textbox1.text(), int(self.textbox2.text())))
-                username_input = self.textbox3.text()
-                self.close()
-                self.client = newWindow()
-                self.client.show()
-                print("connected to server")
-            except Exception:
-                 alert.setText("Wrong IP or port number! ")
-                 alert.setWindowTitle("Error")
-                 alert.setIcon(QMessageBox.Icon.Warning)
-                 alert.setStandardButtons(QMessageBox.StandardButton.Ok)
-                 alert.exec_()
-            
-            
-            
-               
-            
-                
-        
-                
-                
-                    
-
-            
-                    
-            
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.username)
-        self.layout.addWidget(self.textbox3)
-        self.layout.addWidget(self.label2)
-        self.layout.addWidget(self.textbox1)
-        self.layout.addWidget(self.textbox2)
-        self.layout.addWidget(self.button)
         
        
-        self.button.clicked.connect(on_click)
+        
+        self.resize(1000, 1000)
+        self.setWindowTitle("Please wait for connection")
+        
+        self.label17 = QLabel("Please wait for client to connect")
+        self.ip = QLabel("Connect to this IP!")
+        self.ip2 = QLabel(HOST)
+        self.ip2.setFont(QFont('Montserrat', 20))
+        
+        self.ip.setFont(QFont('Arial', 20))
+        self.label17.move(200,200)
+        self.label17.setFont(QFont('Arial', 20))
+      
+        self.image = QLabel(self)
+        pixelmap = QPixmap("pic.webp")
+        self.label19 = QLabel(self)
+        self.image.setPixmap(pixelmap)
+        
+        def set_username():
+            alert = QMessageBox()
+            alert.setText("Enter your username")
+            
+            alert.setWindowTitle("Enter your username")
+            alert.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = alert.exec_()
+            if(returnValue == QMessageBox.Ok and None):
+                  self.close()
+                  self.client_socket = newWindow()
+                  self.client_socket.show()
+            elif(returnValue == QMessageBox.Cancel):
+                  exit()
+            
+                  
+        set_username()
+       
+
+        
+        
+        
+        
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.label17)
+        self.label17.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.ip)
+        self.ip.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.ip2)
+        self.ip2.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.image)
+        self.image.setScaledContents(True)
+        
+
         
         self.setLayout(self.layout)
+
+        def on_load():
+            print("??????????")
+            
+            print("does this get run?")
+            self.close()
+            self.client_socket = newWindow()
+            print("or this?")
+            self.client_socket.show()
+            self.close()
+            
+            print("what about this?")
+        on_load()
+
         
 
-
-
-     
 class newWindow(QMainWindow):
       new_signal = pyqtSignal(str)
       def __init__(self):
-            
             super().__init__()
             
+            print("here")
+            self.resize(1000,1000)
+            self.setWindowTitle("Server app")
+            navbar = self.menuBar()
+            
+            username = navbar.addMenu("Username")
+            
+           
+           
             
             def update_label(message):
                     
                     label = QLabel(message)
                     
                     print(message)
-                    
                     for user, msg in messagesSent:
-                        if(user == "User 1"):
-                            
-                            message_layout = QHBoxLayout()
-                            newLabel = QLabel("Anonymous")
-                            label.setWordWrap(True)
-                            newLabel.setStyleSheet("padding-right 10px;")
-                            label.setStyleSheet("background-color: lightgray; padding: 5px; border-radius: 5px; height: 40px;")
-                            message_layout.addStretch()
-                            self.client.addLayout(message_layout)
-                        elif(user == "User 2"):
+                        if(user == "User 2"):
                              message_layout = QHBoxLayout()
                              
-                             newLabel = QLabel(username_input)
+                             newLabel = QLabel("Temporary name")
                              newLabel.setStyleSheet("padding: 5px;")
-                             label.setStyleSheet("background-color: lightgreen; padding: 5px; border-radius: 5px; height: 50px;")
+                             label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                              self.client.addLayout(message_layout)
-                        
+                        elif(user == "User 1"):
+                            message_layout = QHBoxLayout()
+                            newLabel = QLabel("Anonymous")
+                            
+                            newLabel.setStyleSheet("padding-right 10px;")
+                            label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                     self.client.addWidget(label)
                     self.client.addWidget(newLabel)
-                    
-                    
-                    
-                
 
-            self.resize(1000,1000)
-            self.setWindowTitle("Client app")
-            navbar = self.menuBar()
-            self.label19 = QLabel("Client messenger ")
-            
-            navbar.addMenu(username_input)
-            exit = QAction("Exit", self)
             def send(message):
-                if(message == ""):
-                    return
-                messagesSent.append(("User 2", message))
-                
-                s.sendall(bytes(message, encoding='utf8'))
-                
-
-                print(message, 2421841)
-                print(s.getsockname())
-                print("does this get run here?")
-                print(messagesSent)
-                self.message.setText("")
-                self.new_signal.emit(message)
-      
-                
+                  if(message == ""):
+                        return
+                  messagesSent.append(("User 1", message))
+                  
+                  conn.sendall(bytes(message, encoding='utf8'))
+                  print(messagesSent)
+                  self.message.setText("")
+                  self.new_signal.emit(message)
+            
             self.new_signal.connect(update_label)
             def receive():
-                 while True:
-                    ready, _, _ = select.select([s], [], [], 0.5)
-                    print(ready)
-                    if(ready):
-                        data = s.recv(1024)
+                  global conn
 
-                        if(not data):
-                            print("disconnected")
-                            break
+                  while True:
+                        if conn == None:
+                              continue
+
+                        ready, _, _ = select.select([conn], [], [], 0.5)
+                        print(ready, "line 119")
                         
-                        message = data.decode("utf-8")
-                        messagesSent.append(("User 1", message))
-                        print(messagesSent)
-                        self.new_signal.emit(message)
-                        
+                        if(ready):
+                              data = conn.recv(1024)
+                              print("this has been run")
+                              if(not data):
+                                    print("disconnected")
+                                    break
+                              print(data)
+                              message = data.decode("utf-8")
+                              messagesSent.append(("User 2", message))
+                              print(messagesSent)
+                              self.new_signal.emit(message)
+                              print("what about this?")
             
 
-            thread = threading.Thread(target=receive, daemon = True)
-            thread.start()
-            
-            
-                    
-             
+            thread2 = threading.Thread(target=receive, daemon = True)
+            thread2.start()
+
             central = QWidget()
             self.setCentralWidget(central)
             self.client = QVBoxLayout()
             self.message = QLineEdit(self)
-            self.message.setGeometry(100, 500, 500, 100)
+            
             self.button7 = QPushButton("Send",self)
             self.message.setPlaceholderText("Type in a message to send")
             self.button7.setGeometry(50, 50, 50, 50)
-            r = self.button7.clicked.connect(lambda: send(self.message.text()))
+            self.button7.clicked.connect(lambda: send(self.message.text()))
             self.client.addWidget(self.message)
             self.client.addWidget(self.button7)
             self.button7.setStyleSheet("border-radius: 10px;")
@@ -177,12 +203,20 @@ class newWindow(QMainWindow):
             central.setLayout(self.client)
 
             
-            
-            
 
-
+thread = threading.Thread(target=connect, daemon = True)
+thread.start()
 
 app = QApplication([])
+
+
+
 window = window()
 window.show()
+
 app.exec()
+
+
+
+
+
