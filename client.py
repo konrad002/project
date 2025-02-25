@@ -84,7 +84,7 @@ class newWindow(QMainWindow):
             
             def update_label(message):
                     
-                    label = QLabel(message)
+                    
                     
                     print(message)
                     
@@ -92,22 +92,22 @@ class newWindow(QMainWindow):
                         if(user == "User 1"):
                             
                             message_layout = QHBoxLayout()
-                            newLabel = QLabel("Anonymous")
+                            label = QLabel("Anonymous" + ": " + message)
                             label.setWordWrap(True)
-                            newLabel.setStyleSheet("padding-right 10px;")
-                            label.setStyleSheet("background-color: lightgray; padding: 5px; border-radius: 5px; height: 40px;")
+                            
+                            label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                             message_layout.addStretch()
                             self.client.addLayout(message_layout)
                         elif(user == "User 2"):
                              message_layout = QHBoxLayout()
                              
-                             newLabel = QLabel(username_input)
-                             newLabel.setStyleSheet("padding: 5px;")
-                             label.setStyleSheet("background-color: lightgreen; padding: 5px; border-radius: 5px; height: 50px;")
-                             self.client.addLayout(message_layout)
+                             label = QLabel(username_input + ": "+ message)
+                             
+                             label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
+                             
                         
                     self.client.addWidget(label)
-                    self.client.addWidget(newLabel)
+                    
                     
                     
                     

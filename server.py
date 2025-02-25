@@ -5,6 +5,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import select
 import keyboard
+import asyncio
 
 hostname = str(socket.gethostname())
 HOST = socket.gethostbyname(hostname)
@@ -42,7 +43,7 @@ class window(QWidget):
         self.client_socket = None
         
         
-       
+        
         
         self.resize(1000, 1000)
         self.setWindowTitle("Please wait for connection")
@@ -61,22 +62,41 @@ class window(QWidget):
         self.label19 = QLabel(self)
         self.image.setPixmap(pixelmap)
         
-        def set_username():
-            alert = QMessageBox()
-            alert.setText("Enter your username")
+        def username_server():
+              global username
+              username = self.textboxer.text()
+              print(username, "line 65")
+              alert = QMessageBox()
+
+              if(username == ""):
+                    alert.setText("Enter a username")
+                    alert.exec_()
+                    
+              elif(conn != None and username != ""):
+                    self.close()
+                    self.client_socket = newWindow()
+                    self.client_socket.show()
+
+              elif(conn == None and username != ""):
+                    
+                    alert.setText("Please wait for client to connect")
+                    alert.exec_()
+              
+
+        
             
-            alert.setWindowTitle("Enter your username")
-            alert.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            returnValue = alert.exec_()
-            if(returnValue == QMessageBox.Ok and None):
-                  self.close()
-                  self.client_socket = newWindow()
-                  self.client_socket.show()
-            elif(returnValue == QMessageBox.Cancel):
-                  exit()
             
-                  
-        set_username()
+        self.textboxer = QLineEdit(self)
+        self.textboxer.setPlaceholderText("Type Username")
+        self.button79 = QPushButton("Send",self)
+        self.button79.setGeometry(100, 100, 50, 50)
+        
+        
+        
+        self.button79.clicked.connect(lambda: username_server())
+            
+        
+        
        
 
         
@@ -91,24 +111,16 @@ class window(QWidget):
         self.layout.addWidget(self.ip2)
         self.ip2.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.image)
+        self.layout.addWidget(self.textboxer)
+        self.layout.addWidget(self.button79)
         self.image.setScaledContents(True)
         
 
         
         self.setLayout(self.layout)
+        
 
-        def on_load():
-            print("??????????")
-            
-            print("does this get run?")
-            self.close()
-            self.client_socket = newWindow()
-            print("or this?")
-            self.client_socket.show()
-            self.close()
-            
-            print("what about this?")
-        on_load()
+        
 
         
 
@@ -122,32 +134,32 @@ class newWindow(QMainWindow):
             self.setWindowTitle("Server app")
             navbar = self.menuBar()
             
-            username = navbar.addMenu("Username")
+            
             
            
            
             
             def update_label(message):
                     
-                    label = QLabel(message)
+                    
                     
                     print(message)
                     for user, msg in messagesSent:
                         if(user == "User 2"):
                              message_layout = QHBoxLayout()
+                             label = QLabel("Anonymous" + ": "+ message)
                              
-                             newLabel = QLabel("Temporary name")
-                             newLabel.setStyleSheet("padding: 5px;")
+                             
                              label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                              self.client.addLayout(message_layout)
                         elif(user == "User 1"):
                             message_layout = QHBoxLayout()
-                            newLabel = QLabel("Anonymous")
+                            label = QLabel(username + ": "+ message)
                             
-                            newLabel.setStyleSheet("padding-right 10px;")
+                            
                             label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                     self.client.addWidget(label)
-                    self.client.addWidget(newLabel)
+                    
 
             def send(message):
                   if(message == ""):
