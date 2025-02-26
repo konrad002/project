@@ -5,7 +5,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import select
 import keyboard
-
+import json
+from datetime import datetime
 
 hostname = str(socket.gethostname())
 HOST = socket.gethostbyname(hostname)
@@ -39,6 +40,9 @@ def connect():
                   app.exit()
 
                   exit()
+            elif(conn == None):
+                 print("does this ever get run?")
+                 exit()
 
             print("connected to", addr)
             print(pastConnections)
@@ -54,10 +58,10 @@ class window(QWidget):
         
       super().__init__()
       self.client_socket = None
-        
+      self.username = self.get_username()  
       self.resize(1000, 1000)
       self.setWindowTitle("Please wait for connection")
-        
+      
       self.label17 = QLabel("Please wait for client to connect")
       self.ip = QLabel("Connect to this IP!")
       self.ip2 = QLabel(HOST)
@@ -72,11 +76,7 @@ class window(QWidget):
       self.label19 = QLabel(self)
       self.image.setPixmap(pixelmap)
 
-      self.textboxer = QLineEdit(self)
-      self.textboxer.setPlaceholderText("Type Username")
-      self.button79 = QPushButton("Send",self)
-      self.button79.setGeometry(100, 100, 50, 50)
-      self.button79.clicked.connect(lambda: self.username_server())
+     
 
       self.layout = QVBoxLayout()
       self.layout.addWidget(self.label17)
@@ -85,41 +85,48 @@ class window(QWidget):
       self.ip.setAlignment(Qt.AlignCenter)
       self.layout.addWidget(self.ip2)
       self.ip2.setAlignment(Qt.AlignCenter)
-      self.layout.addWidget(self.textboxer)
-      self.layout.addWidget(self.button79)
+      
       self.layout.addWidget(self.image)
       self.image.setScaledContents(True)
-        
+      
       self.setLayout(self.layout)
+      
         
-        
-    def username_server(self):
-      global username
-      username = self.textboxer.text()
+    def get_username(self):
+          global username
+          username, ok = QInputDialog.getText(self, "Enter your username", "Please enter your username")
+          if(ok and username != ""):
+            
+            self.check_connection(username)
+            return
+          elif(ok and username == ""):
+            print("enter username")
+            
+            self.get_username()
+          else:
+               print("fhasfgsa")
+               exit()
+               
+               
+          
+          
+    def check_connection(self, username):
+      
       print(username, "line 65")
-      alert = QMessageBox()
-
-      if(username == ""):
-            alert.setText("Enter a username")
-            alert.exec_()
+      
+      if(conn == None and username != ""):
                     
-      elif(conn != None and username != ""):
-            self.close()
-            self.client_socket = newWindow()
-            self.client_socket.show()
-
-      elif(conn == None and username != ""):
-                    
-            alert.setText("Please wait for client to connect")
-            alert.exec_()
+            print("Please wait for client to connect", 3000)
+            
             while True:
                   if(conn != None):
-                        alert.done(1)
+                        
                         self.close()
                         self.client_socket = newWindow()
                         self.client_socket.show()
                         break
-                          
+      else:
+           exit()
 
               
 class newWindow(QMainWindow):
@@ -135,7 +142,11 @@ class newWindow(QMainWindow):
             self.new_signal.connect(self.update_label)
             thread2 = threading.Thread(target= self.receive, daemon = True)
             thread2.start()
-            
+
+            self.alert = QStatusBar()
+            self.setStatusBar = (self.alert)
+            self.alert.showMessage("Ready", 20000)
+
             central = QWidget()
             self.setCentralWidget(central)
             self.client = QVBoxLayout()
@@ -152,7 +163,7 @@ class newWindow(QMainWindow):
             keyboard.on_press_key("Enter", lambda _: self.send(self.message.text()))
             central.setLayout(self.client)
             
-           
+            
            
             
       def update_label(self, message):
@@ -160,14 +171,14 @@ class newWindow(QMainWindow):
             print(message)
             for user, msg in messagesSent:
                   if(user == "User 2"):
-                        message_layout = QHBoxLayout()
-                        label = QLabel("Anonymous" + ": "+ message)
+                        
+                        label = QLabel(client_username + ": "+ message + "  \n " + timeSent2)
 
                         label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
-                        self.client.addLayout(message_layout)
+                        
                   elif(user == "User 1"):
-                        message_layout = QHBoxLayout()
-                        label = QLabel(username + ": "+ message)
+                        
+                        label = QLabel(username + ": "+ message + " \n  " + timeSent)
                         label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                         
             self.client.addWidget(label)
@@ -176,16 +187,28 @@ class newWindow(QMainWindow):
       def send(self, message):
             if(message == ""):
                   return
+            print(len(messagesSent))
+            if(len(message) > 256):
+                  print("Message is too long! Maximum length 256")
+                  return
+            global timeSent
+            timeSent = datetime.now().strftime("%H:%M")
             messagesSent.append(("User 1", message))
-                  
-            conn.sendall(bytes(message, encoding='utf8'))
+            sending = {
+             "username" : username,
+             "message" : message,
+             "time" : timeSent
+            }
+            print(timeSent)
+            data = json.dumps(sending)
+            conn.sendall(data.encode("utf-8"))
             print(messagesSent)
             self.message.setText("")
             self.new_signal.emit(message)
             
             
       def receive(self):
-            global conn
+            global conn, client_username, timeSent2
 
             while True:
                   if conn == None:
@@ -201,10 +224,15 @@ class newWindow(QMainWindow):
                               print("disconnected")
                               break
                         print(data)
-                        message = data.decode("utf-8")
-                        messagesSent.append(("User 2", message))
+                        
+                        message = json.loads(data.decode("utf-8"))
+                        print(message)
+                        client_username = message["username"]
+                        message_received = message["message"]
+                        timeSent2 = message["time"]
+                        messagesSent.append(("User 2", message_received))
                         print(messagesSent)
-                        self.new_signal.emit(message)
+                        self.new_signal.emit(message_received)
                         print("what about this?")
            
       

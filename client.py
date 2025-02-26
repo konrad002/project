@@ -4,7 +4,8 @@ import select
 import threading
 from PyQt5.QtCore import pyqtSignal
 import keyboard
-
+import json
+from datetime import datetime
 messagesSent = []
 
 
@@ -31,14 +32,13 @@ class window(QWidget):
         self.layout.addWidget(self.textbox1)
         self.layout.addWidget(self.textbox2)
         self.layout.addWidget(self.button)
+        #keyboard.on_press_key("Enter", lambda _: self.on_click()) //use later
         self.button.clicked.connect(self.on_click)
         
        
         self.setLayout(self.layout)
 
-        if(keyboard.is_pressed("Enter")):
-            print("hello world")
-            self.on_click()
+        
 
     def on_click(self):
         alert = QMessageBox()
@@ -47,10 +47,10 @@ class window(QWidget):
         
         if(self.client != None):
                     print("does this get run?")
-                    self.close()
-                    app.exit()
+                    
                     exit()
-                    return    
+                        
+        
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             
             
@@ -61,7 +61,7 @@ class window(QWidget):
             self.client = newWindow()
             self.client.show()
             print("connected to server")
-            
+
         except Exception:
             alert.setText("Wrong IP or port number! ")
             alert.setWindowTitle("Error")
@@ -70,30 +70,7 @@ class window(QWidget):
             alert.exec_()
             
             
-            
-               
-            
-                
-        
-                
-                
-                    
-
-            
-                    
-            
-        
-    
-        
-        
-        
-        
-        
-            
-        
-
-
-
+ 
      
 class newWindow(QMainWindow):
       new_signal = pyqtSignal(str)
@@ -135,14 +112,14 @@ class newWindow(QMainWindow):
                 if(user == "User 1"):
                             
                     message_layout = QHBoxLayout()
-                    label = QLabel("Anonymous" + ": " + message)
+                    label = QLabel(client_username + ": " + message + " \n " + timeSent2)
                     label.setWordWrap(True)
                     label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                     message_layout.addStretch()
                     
                 elif(user == "User 2"):
                         message_layout = QHBoxLayout()
-                        label = QLabel(username_input + ": "+ message)
+                        label = QLabel(username_input + ": "+ message +" \n  " +timeSent)
                         label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
             
             self.client.addWidget(label)
@@ -157,9 +134,23 @@ class newWindow(QMainWindow):
       def send(self, message):
         if(message == ""):
             return
+        if(len(message) > 256):
+            print("Message is too long! Maximum length 256")
+            return
+        print(len(messagesSent))
+        global timeSent
+        timeSent = datetime.now().strftime("%H:%M")
+
         messagesSent.append(("User 2", message))
-                
-        s.sendall(bytes(message, encoding='utf8'))
+        sending = {
+             "username" : username_input,
+             "message" : message,
+             "time": timeSent
+        }
+        
+        
+        data = json.dumps(sending)
+        s.sendall(data.encode("utf-8"))
                 
 
         print(message, 2421841)
@@ -170,8 +161,8 @@ class newWindow(QMainWindow):
         self.new_signal.emit(message)  
         
 
-
       def receive(self):
+        global client_username, timeSent2
         while True:
             ready, _, _ = select.select([s], [], [], 0.5)
             print(ready)
@@ -182,26 +173,18 @@ class newWindow(QMainWindow):
                     print("disconnected")
                     app.exit()
                     break
-                        
-                message = data.decode("utf-8")
-                messagesSent.append(("User 1", message))
+                
+                message = json.loads(data.decode("utf-8"))
+                print(message)
+                client_username = message["username"]
+                message_received = message["message"]
+                timeSent2 = message["time"]
+                
+                messagesSent.append(("User 1", message_received))
                 print(messagesSent)
-                self.new_signal.emit(message)
+                self.new_signal.emit(message_received)
                         
             
-
-      
-            
-            
-                    
-             
-            
-
-            
-            
-            
-
-
 
 app = QApplication([])
 window = window()
