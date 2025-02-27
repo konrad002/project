@@ -5,7 +5,7 @@ import threading
 from PyQt5.QtCore import pyqtSignal
 import keyboard
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 messagesSent = []
 
 
@@ -106,19 +106,20 @@ class newWindow(QMainWindow):
             
       def update_label(self, message):
                        
-            print(message)
-                    
-            for user, msg in messagesSent:
+            print(message, "line 109")
+            print(messagesSent, "fsagf")       
+            for user, msg, time in messagesSent:
+                print(user)
                 if(user == "User 1"):
                             
-                    message_layout = QHBoxLayout()
+                    
                     label = QLabel(client_username + ": " + message + " \n " + timeSent2)
                     label.setWordWrap(True)
                     label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
-                    message_layout.addStretch()
+                    
                     
                 elif(user == "User 2"):
-                        message_layout = QHBoxLayout()
+                        print("does this get run?")
                         label = QLabel(username_input + ": "+ message +" \n  " +timeSent)
                         label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
             
@@ -137,11 +138,24 @@ class newWindow(QMainWindow):
         if(len(message) > 256):
             print("Message is too long! Maximum length 256")
             return
+        
         print(len(messagesSent))
         global timeSent
         timeSent = datetime.now().strftime("%H:%M")
+        
+        
+        alert = QMessageBox()
+        
+        #for i, j, k in messagesSent:
+        #    userSecond = datetime.strptime(k, "%H:%M:%S")
+        #    print(userSecond, new)
+        #    if(new >= userSecond and len(messagesSent) >1):
+        #        alert.setText("Sending too fast")
+        #        alert.exec_()
+        #        message = ""
+                
 
-        messagesSent.append(("User 2", message))
+        messagesSent.append(("User 2", message, timeSent))
         sending = {
              "username" : username_input,
              "message" : message,
@@ -171,7 +185,7 @@ class newWindow(QMainWindow):
 
                 if(not data):
                     print("disconnected")
-                    app.exit()
+                    
                     break
                 
                 message = json.loads(data.decode("utf-8"))
@@ -180,7 +194,7 @@ class newWindow(QMainWindow):
                 message_received = message["message"]
                 timeSent2 = message["time"]
                 
-                messagesSent.append(("User 1", message_received))
+                messagesSent.append(("User 1", message_received, timeSent2))
                 print(messagesSent)
                 self.new_signal.emit(message_received)
                         

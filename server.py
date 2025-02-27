@@ -16,36 +16,7 @@ messagesSent = []
 conn = None
 pastConnections = []
 
-def connect():
 
-      print("are we even here?")
-      print("are we here?")
-            
-      global s, conn
-            
-      s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
-      s.bind((HOST, PORT))
-      s.listen(2)
-            
-            
-      while True:
-                  
-            conn, addr = s.accept()
-            print(conn)
-            pastConnections.append(addr)
-            if(conn != None and len(pastConnections) > 1 ):
-                  print("error")
-                  s.close()
-                  s.__exit__()
-                  app.exit()
-
-                  exit()
-            elif(conn == None):
-                 print("does this ever get run?")
-                 exit()
-
-            print("connected to", addr)
-            print(pastConnections)
                   
                   
             
@@ -57,8 +28,14 @@ class window(QWidget):
     def __init__(self):
         
       super().__init__()
+
       self.client_socket = None
-      self.username = self.get_username()  
+      thread = threading.Thread(target=self.connect, daemon = True)
+      thread.start()
+      
+      
+      self.get_username()
+      print("rsaf")
       self.resize(1000, 1000)
       self.setWindowTitle("Please wait for connection")
       
@@ -76,7 +53,7 @@ class window(QWidget):
       self.label19 = QLabel(self)
       self.image.setPixmap(pixelmap)
 
-     
+      
 
       self.layout = QVBoxLayout()
       self.layout.addWidget(self.label17)
@@ -88,46 +65,69 @@ class window(QWidget):
       
       self.layout.addWidget(self.image)
       self.image.setScaledContents(True)
-      
+      print("fas2")
       self.setLayout(self.layout)
+       
+      print("fas")
+      
+    def get_username(self):
+         alert = QMessageBox()
+         global username
+         username, ok = QInputDialog.getText(self, "Enter your username", "Please enter your username")
+         if(ok and username != ""):
+            print(username)
+            pass
+         elif(ok and username == ""):
+            alert.setText("Please enter a username")
+            alert.exec_()
+            self.get_username()
+            
+            
+            
+            
+         else:
+               print("fhasfgsa")
+               exit()   
+    def connect(self):
+
+      print("are we even here?")
+      print("are we here?")
+            
+      global s, conn, addr
+            
+      s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
+      s.bind((HOST, PORT))
+      s.listen(2)
+            
       
         
-    def get_username(self):
-          global username
-          username, ok = QInputDialog.getText(self, "Enter your username", "Please enter your username")
-          if(ok and username != ""):
-            
-            self.check_connection(username)
-            return
-          elif(ok and username == ""):
-            print("enter username")
-            
-            self.get_username()
-          else:
-               print("fhasfgsa")
-               exit()
-               
-               
-          
-          
-    def check_connection(self, username):
-      
-      print(username, "line 65")
-      
-      if(conn == None and username != ""):
-                    
-            print("Please wait for client to connect", 3000)
-            
-            while True:
-                  if(conn != None):
-                        
-                        self.close()
-                        self.client_socket = newWindow()
-                        self.client_socket.show()
-                        break
-      else:
-           exit()
+      while True:
+                  
+            conn, addr = s.accept()
+            print(conn)
+            pastConnections.append(addr)
+            if(conn != None and len(pastConnections) > 1 ):
+                  print("error")
+                  exit()
 
+
+            elif(conn == None):
+                 print("does this ever get run?")
+                 exit()
+            elif(conn != None):
+                 QTimer.singleShot(0, self.show_window)
+                 
+
+            
+            print(pastConnections)
+    def show_window(self):
+         self.close()
+         self.client_socket = newWindow()
+         self.client_socket.show()
+         print("connected to", addr)
+         print(pastConnections)
+    
+    
               
 class newWindow(QMainWindow):
       new_signal = pyqtSignal(str)
@@ -168,8 +168,8 @@ class newWindow(QMainWindow):
             
       def update_label(self, message):
                           
-            print(message)
-            for user, msg in messagesSent:
+            print(message, "line 1778")
+            for user, msg, time in messagesSent:
                   if(user == "User 2"):
                         
                         label = QLabel(client_username + ": "+ message + "  \n " + timeSent2)
@@ -193,7 +193,7 @@ class newWindow(QMainWindow):
                   return
             global timeSent
             timeSent = datetime.now().strftime("%H:%M")
-            messagesSent.append(("User 1", message))
+            messagesSent.append(("User 1", message, timeSent))
             sending = {
              "username" : username,
              "message" : message,
@@ -230,7 +230,7 @@ class newWindow(QMainWindow):
                         client_username = message["username"]
                         message_received = message["message"]
                         timeSent2 = message["time"]
-                        messagesSent.append(("User 2", message_received))
+                        messagesSent.append(("User 2", message_received, timeSent2))
                         print(messagesSent)
                         self.new_signal.emit(message_received)
                         print("what about this?")
@@ -242,8 +242,7 @@ class newWindow(QMainWindow):
 
             
 
-thread = threading.Thread(target=connect, daemon = True)
-thread.start()
+
 
 app = QApplication([])
 window = window()
