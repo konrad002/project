@@ -2,17 +2,18 @@ import socket
 from PyQt5.QtWidgets import *
 import select
 import threading
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import *
 import keyboard
 import json
 from datetime import datetime, timedelta
 messagesSent = []
-
+recentConnections = []
 
 class window(QWidget):
     def __init__(self):
         super().__init__()
         self.client = None
+        
         
         
         self.mainlabel = QLabel("Client login ")
@@ -52,15 +53,36 @@ class window(QWidget):
                         
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            
-            
+        if (s.fileno == -1):
+            with open('temp-client.json', 'r') as read:
+                message = json.load(read)
+                messagesSent.append(message)
+                print("fasg")
+                username_input = self.textbox3.text()
+                self.close()
+                self.client = newWindow()
+                self.client.show()
+
+                print("dfsgagqaw")
+                
+                
+                    
+                read.close()
+                
+                print(messagesSent) 
+
         try:
+            
+            print("???")
             s.connect((self.textbox1.text(), int(self.textbox2.text())))
+            recentConnections.append(s)
+            print(recentConnections)
             username_input = self.textbox3.text()
             self.close()
             self.client = newWindow()
             self.client.show()
             print("connected to server")
+            
 
         except Exception:
             alert.setText("Wrong IP or port number! ")
@@ -98,12 +120,18 @@ class newWindow(QMainWindow):
             self.message.setPlaceholderText("Type in a message to send")
             self.button7.setGeometry(50, 50, 50, 50)
             self.button7.clicked.connect(lambda: self.send(self.message.text()))
+            self.exit = QPushButton("End", self)
+            self.exit.setGeometry(50, 50, 50, 50)
+            self.exit.clicked.connect(lambda: self.exitConnection())
             self.client.addWidget(self.message)
             self.client.addWidget(self.button7)
+            self.client.addWidget(self.exit)
             self.button7.setStyleSheet("border-radius: 10px;")
             keyboard.on_press_key("Enter", lambda _: self.send(self.message.text()))
             central.setLayout(self.client)
-            
+      def exitConnection(self):
+           s.close()
+           exit()
       def update_label(self, message):
                        
             print(message, "line 109")
@@ -176,17 +204,21 @@ class newWindow(QMainWindow):
         
 
       def receive(self):
-        global client_username, timeSent2
+        global client_username, timeSent2, data
         while True:
             ready, _, _ = select.select([s], [], [], 0.5)
             print(ready)
             if(ready):
-                data = s.recv(1024)
+                try:
+                    data = s.recv(1024)
 
-                if(not data):
-                    print("disconnected")
+                except:
+                     print("disconnected")
+                     with open('temp-client.json', 'w') as output:
+                        json.dump(messagesSent, output, indent=3)
+                        output.close()
                     
-                    break
+                        break
                 
                 message = json.loads(data.decode("utf-8"))
                 print(message)
@@ -197,7 +229,15 @@ class newWindow(QMainWindow):
                 messagesSent.append(("User 1", message_received, timeSent2))
                 print(messagesSent)
                 self.new_signal.emit(message_received)
-                        
+                
+                
+                
+                
+                
+                
+                
+                
+            
             
 
 app = QApplication([])
