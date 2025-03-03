@@ -8,13 +8,16 @@ import json
 from datetime import datetime, timedelta
 messagesSent = []
 recentConnections = []
+import os
+loading = False
 
 class window(QWidget):
     def __init__(self):
         super().__init__()
         self.client = None
         
-        
+        global client_username
+        client_username = None
         
         self.mainlabel = QLabel("Client login ")
         self.username = QLabel("Enter your username")
@@ -43,7 +46,7 @@ class window(QWidget):
 
     def on_click(self):
         alert = QMessageBox()
-        global s, username_input
+        global s, username_input, client_username, loading
 
         
         if(self.client != None):
@@ -53,23 +56,24 @@ class window(QWidget):
                         
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if (s.fileno == -1):
-            with open('temp-client.json', 'r') as read:
-                message = json.load(read)
-                messagesSent.append(message)
-                print("fasg")
-                username_input = self.textbox3.text()
-                self.close()
-                self.client = newWindow()
-                self.client.show()
+    
+        if(os.path.exists("temp-client.json")):
+            with open('temp-client.json', 'r') as output:
+                r = json.load(output)
+                        
+                for k in r:
+                    messagesSent.append((k["username"], k["message"], k["time"]))
 
-                print("dfsgagqaw")
-                
-                
+                print(r)
+                client_username = k["username"]
+                username_input = k["username"]
+                loading = True
+                print("run?")
+                print(messagesSent)
+                output.close()
                     
-                read.close()
-                
-                print(messagesSent) 
+                    
+            
 
         try:
             
@@ -78,6 +82,9 @@ class window(QWidget):
             recentConnections.append(s)
             print(recentConnections)
             username_input = self.textbox3.text()
+            print(username_input, client_username)
+            if(username_input == client_username):
+                 print("client and server username's are the same!!!!")
             self.close()
             self.client = newWindow()
             self.client.show()
@@ -92,7 +99,8 @@ class window(QWidget):
             alert.exec_()
             
             
- 
+    
+         
      
 class newWindow(QMainWindow):
       new_signal = pyqtSignal(str)
@@ -127,31 +135,66 @@ class newWindow(QMainWindow):
             self.client.addWidget(self.button7)
             self.client.addWidget(self.exit)
             self.button7.setStyleSheet("border-radius: 10px;")
-            keyboard.on_press_key("Enter", lambda _: self.send(self.message.text()))
+            keyboard.on_press_key("Enter", lambda _: self.send(self.message.text()))#
+            self.new_signal.emit("far")
             central.setLayout(self.client)
+
+           
       def exitConnection(self):
            s.close()
            exit()
-      def update_label(self, message):
+      def update_label(self): #TODO: Fix this god awful code.
                        
-            print(message, "line 109")
+            global client_username, loading
             print(messagesSent, "fsagf")       
-            for user, msg, time in messagesSent:
-                print(user)
-                if(user == "User 1"):
-                            
-                    
-                    label = QLabel(client_username + ": " + message + " \n " + timeSent2)
-                    label.setWordWrap(True)
-                    label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
-                    
-                    
-                elif(user == "User 2"):
-                        print("does this get run?")
-                        label = QLabel(username_input + ": "+ message +" \n  " +timeSent)
-                        label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
             
-            self.client.addWidget(label)
+            if(loading == False):
+                  for user, msg, time in messagesSent[-1:]:
+                        print(msg)
+                        print(user)
+                  
+            
+                        print(loading)
+                        if(user == client_username):
+                              
+                              print("run?, how many times?")
+                        
+                              self.label = QLabel(user + ": "+ msg + "  \n " + time)
+                        
+                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
+                        
+                              self.client.addWidget(self.label)
+                        else:
+                              print(msg)
+                        
+                              self.label = QLabel(user + ": "+ msg + " \n  " + time)
+                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
+                        
+                              self.client.addWidget(self.label)
+            else:
+                 for user, msg, time in messagesSent:
+                        print(msg)
+                        print(user)
+                  
+            
+                        print(loading)
+                        if(user == client_username):
+                              print("run?, how many times?")
+                        
+                              self.label = QLabel(user + ": "+ msg + "  \n " + time)
+                        
+                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
+                        
+                              self.client.addWidget(self.label)
+                        else:
+                              print(msg)
+                        
+                              self.label = QLabel(user + ": "+ msg + " \n  " + time)
+                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
+                        
+                              self.client.addWidget(self.label)
+                 loading = False
+            
                     
                     
                     
@@ -183,7 +226,7 @@ class newWindow(QMainWindow):
         #        message = ""
                 
 
-        messagesSent.append(("User 2", message, timeSent))
+        messagesSent.append((username_input, message, timeSent))
         sending = {
              "username" : username_input,
              "message" : message,
@@ -195,8 +238,7 @@ class newWindow(QMainWindow):
         s.sendall(data.encode("utf-8"))
                 
 
-        print(message, 2421841)
-        print(s.getsockname())
+        
         print("does this get run here?")
         print(messagesSent)
         self.message.setText("")
@@ -215,10 +257,24 @@ class newWindow(QMainWindow):
                 except:
                      print("disconnected")
                      with open('temp-client.json', 'w') as output:
-                        json.dump(messagesSent, output, indent=3)
-                        output.close()
-                    
-                        break
+                        if(os.path.getsize("temp-client.json")):
+                            os.remove("temp-client.json")
+                            output.close()
+                        else:
+                            message_list = []
+                            for something in messagesSent:
+                                sending = {
+                                                "username" : something[0],
+                                                "message" : something[1],
+                                                "time" : something[2]
+                                          }
+                                message_list.append(sending)
+                            json.dump(message_list, output, indent=4)
+                                          
+                            print(sending)
+                                         
+                            output.close()
+                            break
                 
                 message = json.loads(data.decode("utf-8"))
                 print(message)
@@ -226,7 +282,7 @@ class newWindow(QMainWindow):
                 message_received = message["message"]
                 timeSent2 = message["time"]
                 
-                messagesSent.append(("User 1", message_received, timeSent2))
+                messagesSent.append((client_username, message_received, timeSent2))
                 print(messagesSent)
                 self.new_signal.emit(message_received)
                 

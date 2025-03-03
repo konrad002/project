@@ -15,6 +15,7 @@ PORT = 12345
 messagesSent = []
 conn = None
 pastConnections = []
+loading = False
 
 
                   
@@ -32,9 +33,9 @@ class window(QWidget):
       self.client_socket = None
       thread = threading.Thread(target=self.connect, daemon = True)
       thread.start()
-      global client_username, username
-      client_username = "User 2"
-      username = "User 1"
+      global client_username
+      client_username = None
+      
       
       self.get_username()
       print("rsaf")
@@ -74,33 +75,50 @@ class window(QWidget):
       
     def get_username(self):
          alert = QMessageBox()
-         global username, s
+         global username, s, client_username, loading
          
-         if(True):
+         if(os.path.exists("temp-server.json")):
+            ok = QInputDialog.getText(self, "Want to relogin to past connection?", "hi")
+            if(ok):
+                   
+                   with open('temp-server.json', 'r') as output:
+                        r = json.load(output)
+                        
+                        for k in r:
+                              messagesSent.append((k["username"], k["message"], k["time"]))
+                        print(r)
+                        client_username = k["username"]
+                        username = k["username"]
+                        loading = True
+                        
+                        print("run?")
+                        print(messagesSent)
+                        output.close()
+                        QTimer.singleShot(0, self.show_window)
+            elif(not ok):
+                 exit()
+            else:
+                 pass
+
+         else:
+            
             username, ok = QInputDialog.getText(self, "Enter your username", "Please enter your username")
             if(ok and username != ""):
                   print(username)
-                  pass
+                  if(username == client_username):
+                       self.get_username()
+                  else:   
+                        pass
             elif(ok and username == ""):
                   alert.setText("Please enter a username")
                   alert.exec_()
                   self.get_username()
-
-         elif(False):
-              ok = QInputDialog.getText(self, "Want to relogin to past connection?")
-              if(ok):
-                   s.connect(s.getpeername())
-              else:
-                   self.get_username()
               
          
          
             
             
-            
-         else:
-               print("fhasfgsa")
-               exit()   
+        
     def connect(self):
 
       print("are we even here?")
@@ -129,23 +147,8 @@ class window(QWidget):
             elif(conn == None):
                  
                  print("how did we get here?")
-            elif(conn != None):
-                 if(os.path.exists("temp-server.json")):
-                      with open('temp-server.json', 'r') as output:
-                        r = json.load(output)
-                        
-                        for k in r:
-                              messagesSent.append((k["username"], k["message"], k["time"]))
-                        print(r)
-                        
-                        
-                        print("run?")
-                        print(messagesSent)
-                        output.close()
-                        QTimer.singleShot(0, self.show_window)
-
-                 else:
-                      QTimer.singleShot(0, self.show_window)
+            elif(conn != None and os.path.exists("temp-server.json") == False):
+                 QTimer.singleShot(0, self.show_window)
                  
 
             
@@ -210,28 +213,65 @@ class newWindow(QMainWindow):
            os.remove("temp-server.json")
            exit()
             
-
-      def update_label(self):
+      
+           
+      def update_label(self): # TODO: Fix this awful code please. 1 loop is bad enough
                           
-            global label
+            global loading, client_username
             print(messagesSent)
-            for user, msg, time in messagesSent:
-                  print(msg)
-                  if(user == client_username or user == "User 2"):
-                        
-                        label = QLabel(client_username + ": "+ msg + "  \n " + time)
-
-                        label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
-                       
-                  elif(user == username or user == "User 1"):
+            if(messagesSent != []):
+                 pass
+            
+            if(loading == False):
+                  for user, msg, time in messagesSent[-1:]:
                         print(msg)
+                        print(user)
+                  
+            
+                        print(loading)
+                        if(user == client_username):
+                              print("run?, how many times?")
                         
-                        label = QLabel(username + ": "+ msg + " \n  " + time)
-                        label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
-                     
-                  if(messagesSent != []):
-                        self.client.addWidget(label)
-                    
+                              self.label = QLabel(user + ": "+ msg + "  \n " + time)
+                        
+                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
+                        
+                              self.client.addWidget(self.label)
+                        else:
+                              print(msg)
+                        
+                              self.label = QLabel(user + ": "+ msg + " \n  " + time)
+                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
+                        
+                              self.client.addWidget(self.label)
+            else:
+                 for user, msg, time in messagesSent:
+                        print(msg)
+                        print(user)
+                  
+            
+                        print(loading)
+                        if(user == client_username):
+                              print("run?, how many times?")
+                        
+                              self.label = QLabel(user + ": "+ msg + "  \n " + time)
+                        
+                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
+                        
+                              self.client.addWidget(self.label)
+                        else:
+                              print(msg)
+                        
+                              self.label = QLabel(user + ": "+ msg + " \n  " + time)
+                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
+                        
+                              self.client.addWidget(self.label)
+                 loading = False
+
+            
+                  
+           
+            
 
       def send(self, message):
             if(message == ""):
@@ -259,7 +299,8 @@ class newWindow(QMainWindow):
             
       def receive(self):
             global conn, timeSent2, client_username
-
+            
+                 
             while True:
                   if conn == None:
                         continue
