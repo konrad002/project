@@ -14,7 +14,7 @@ HOST = socket.gethostbyname(hostname)
 PORT = 12345
 messagesSent = []
 conn = None
-pastConnections = []
+pastConnections = {}
 loading = False
 
 
@@ -72,14 +72,28 @@ class window(QWidget):
       self.setLayout(self.layout)
        
       print("fas")
-      
-    def get_username(self):
+    def set_username(self):  
+         global username
          alert = QMessageBox()
+         username, ok = QInputDialog.getText(self, "Enter your username", "Please enter your username")
+         if(ok and username != ""):
+            print(username)
+            pass
+         elif(ok and username == ""):
+            alert.setText("Please enter a username")
+            alert.exec_()
+            self.set_username()
+    def get_username(self):
+         
          global username, s, client_username, loading
          
          if(os.path.exists("temp-server.json")):
-            ok = QInputDialog.getText(self, "Want to relogin to past connection?", "hi")
-            if(ok):
+            label_username = QMessageBox()
+            label_username.setIcon(QMessageBox.Information)
+            label_username.setText("Want to relogin to past connection?")
+            label_username.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            r = label_username.exec_()
+            if(r == QMessageBox.Ok):
                    
                    with open('temp-server.json', 'r') as output:
                         r = json.load(output)
@@ -94,38 +108,30 @@ class window(QWidget):
                         print("run?")
                         print(messagesSent)
                         output.close()
-                        QTimer.singleShot(0, self.show_window)
-            elif(not ok):
-                 exit()
+                        
+                        
+            elif(r == QMessageBox.Cancel):
+                 os.remove("temp-server.json")
+                 os.remove("temp-client.json")
+                 self.set_username()
             else:
                  pass
 
          else:
-            
-            username, ok = QInputDialog.getText(self, "Enter your username", "Please enter your username")
-            if(ok and username != ""):
-                  print(username)
-                  if(username == client_username):
-                       self.get_username()
-                  else:   
-                        pass
-            elif(ok and username == ""):
-                  alert.setText("Please enter a username")
-                  alert.exec_()
-                  self.get_username()
+            self.set_username()
               
          
          
             
             
-        
+    
     def connect(self):
 
       print("are we even here?")
       print("are we here?")
             
       
-      global s, conn, addr
+      global s, conn, addr, client_username, username
       s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
       s.bind((HOST, PORT))
       s.listen(2)
@@ -137,8 +143,10 @@ class window(QWidget):
             conn, addr = s.accept()
             
             
-            pastConnections.append(s.getpeername)
-            if(conn != None and len(pastConnections) > 1 ):
+            pastConnections["server"] = username
+            pastConnections["client"] = client_username
+            
+            if(conn != None and len(pastConnections) > 2 ):
                   
                   print("error")
                   exit()
@@ -147,19 +155,20 @@ class window(QWidget):
             elif(conn == None):
                  
                  print("how did we get here?")
-            elif(conn != None and os.path.exists("temp-server.json") == False):
+            elif(conn != None):
                  QTimer.singleShot(0, self.show_window)
                  
 
             
             print(pastConnections)
+
     def show_window(self):
          
          self.close()
          self.client_socket = newWindow()
          self.client_socket.show()
          print("connected to", addr)
-         print(pastConnections)
+         print(pastConnections, "line 163")
     
     
               
@@ -207,10 +216,15 @@ class newWindow(QMainWindow):
             central.setLayout(self.client)
             
             
-           
+      def closeEvent(self, event):
+           self.disconnections()  
+           event.accept()
+
       def exitConnection(self):
            conn.close()
-           os.remove("temp-server.json")
+           if(os.path.exists("temp-server.json")):
+                  os.remove("temp-server.json")
+                  os.remove("temp-client.json")
            exit()
             
       
@@ -229,19 +243,19 @@ class newWindow(QMainWindow):
                   
             
                         print(loading)
-                        if(user == client_username):
+                        if(user == pastConnections["server"]):
                               print("run?, how many times?")
                         
                               self.label = QLabel(user + ": "+ msg + "  \n " + time)
                         
-                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
+                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                         
                               self.client.addWidget(self.label)
                         else:
                               print(msg)
                         
                               self.label = QLabel(user + ": "+ msg + " \n  " + time)
-                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
+                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                         
                               self.client.addWidget(self.label)
             else:
@@ -251,19 +265,19 @@ class newWindow(QMainWindow):
                   
             
                         print(loading)
-                        if(user == client_username):
+                        if(user == pastConnections["server"]):
                               print("run?, how many times?")
                         
                               self.label = QLabel(user + ": "+ msg + "  \n " + time)
                         
-                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
+                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                         
                               self.client.addWidget(self.label)
                         else:
                               print(msg)
                         
                               self.label = QLabel(user + ": "+ msg + " \n  " + time)
-                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
+                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                         
                               self.client.addWidget(self.label)
                  loading = False
@@ -296,14 +310,38 @@ class newWindow(QMainWindow):
             self.message.setText("")
             self.new_signal.emit(message)
             
-            
+      def disconnections(self):
+           label2 = QMessageBox()
+           label2.setText("Client has disconnected")
+           label2.exec_()
+
+           print("disconnected")
+           with open('temp-server.json', 'w') as output:
+            if(os.path.getsize("temp-server.json")):
+                  os.remove("temp-server.json")
+                  output.close()
+            else:
+                  message_list = []
+                  for something in messagesSent:
+                                          
+                        sending = {
+                         "username" : something[0],
+                         "message" : something[1],
+                         "time" : something[2]
+                         }
+                        message_list.append(sending)
+                  json.dump(message_list, output, indent=4)
+                                          
+                  print(sending)
+                                         
+                  output.close()
+            exit()        
       def receive(self):
             global conn, timeSent2, client_username
             
                  
             while True:
-                  if conn == None:
-                        continue
+                  
 
                   ready, _, _ = select.select([conn], [], [], 0.5)
                  
@@ -316,27 +354,8 @@ class newWindow(QMainWindow):
                               data = conn.recv(1024)
                               print("this has been run")
                         except:
-                              print("disconnected")
-                              with open('temp-server.json', 'w') as output:
-                                    if(os.path.getsize("temp-server.json")):
-                                         os.remove("temp-server.json")
-                                         output.close()
-                                    else:
-                                         message_list = []
-                                         for something in messagesSent:
-                                          
-                                          sending = {
-                                                "username" : something[0],
-                                                "message" : something[1],
-                                                "time" : something[2]
-                                          }
-                                          message_list.append(sending)
-                                    json.dump(message_list, output, indent=4)
-                                          
-                                    print(sending)
-                                         
-                                    output.close()
-                                    break
+                              QTimer.singleShot(0, self.disconnections)
+                              break
                         print(data)
                         
                         

@@ -7,7 +7,7 @@ import keyboard
 import json
 from datetime import datetime, timedelta
 messagesSent = []
-recentConnections = []
+pastConnections = {}
 import os
 loading = False
 
@@ -78,10 +78,14 @@ class window(QWidget):
         try:
             
             print("???")
+            
             s.connect((self.textbox1.text(), int(self.textbox2.text())))
-            recentConnections.append(s)
-            print(recentConnections)
+            
+            
+            print(pastConnections)
             username_input = self.textbox3.text()
+            pastConnections["client"] = username_input
+            pastConnections["server"] = client_username
             print(username_input, client_username)
             if(username_input == client_username):
                  print("client and server username's are the same!!!!")
@@ -139,9 +143,15 @@ class newWindow(QMainWindow):
             self.new_signal.emit("far")
             central.setLayout(self.client)
 
-           
+      def closeEvent(self, event):
+           self.disconnections()  
+           event.accept()     
+
       def exitConnection(self):
            s.close()
+           if(os.path.exists("temp-server.json")):
+                  os.remove("temp-server.json")
+                  os.remove("temp-client.json")
            exit()
       def update_label(self): #TODO: Fix this god awful code.
                        
@@ -155,20 +165,20 @@ class newWindow(QMainWindow):
                   
             
                         print(loading)
-                        if(user == client_username):
+                        if(user == pastConnections["client"]):
                               
                               print("run?, how many times?")
                         
                               self.label = QLabel(user + ": "+ msg + "  \n " + time)
                         
-                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
+                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                         
                               self.client.addWidget(self.label)
                         else:
                               print(msg)
                         
                               self.label = QLabel(user + ": "+ msg + " \n  " + time)
-                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
+                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                         
                               self.client.addWidget(self.label)
             else:
@@ -178,19 +188,19 @@ class newWindow(QMainWindow):
                   
             
                         print(loading)
-                        if(user == client_username):
+                        if(user == pastConnections["client"]):
                               print("run?, how many times?")
                         
                               self.label = QLabel(user + ": "+ msg + "  \n " + time)
                         
-                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
+                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                         
                               self.client.addWidget(self.label)
                         else:
                               print(msg)
                         
                               self.label = QLabel(user + ": "+ msg + " \n  " + time)
-                              self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
+                              self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                         
                               self.client.addWidget(self.label)
                  loading = False
@@ -244,37 +254,40 @@ class newWindow(QMainWindow):
         self.message.setText("")
         self.new_signal.emit(message)  
         
-
+      def disconnections(self):
+           label2 = QMessageBox()
+           label2.setText("Server has disconnected")
+           label2.exec_()
+           with open('temp-client.json', 'w') as output:
+            
+                message_list = []
+                for something in messagesSent:
+                    sending = {
+                        "username" : something[0],
+                        "message" : something[1],
+                        "time" : something[2]
+                        }
+                    message_list.append(sending)
+                json.dump(message_list, output, indent=4)
+                                          
+                print(sending)                   
+                output.close()
+                            
       def receive(self):
+        
         global client_username, timeSent2, data
         while True:
+            
             ready, _, _ = select.select([s], [], [], 0.5)
             print(ready)
+            
             if(ready):
                 try:
                     data = s.recv(1024)
 
                 except:
-                     print("disconnected")
-                     with open('temp-client.json', 'w') as output:
-                        if(os.path.getsize("temp-client.json")):
-                            os.remove("temp-client.json")
-                            output.close()
-                        else:
-                            message_list = []
-                            for something in messagesSent:
-                                sending = {
-                                                "username" : something[0],
-                                                "message" : something[1],
-                                                "time" : something[2]
-                                          }
-                                message_list.append(sending)
-                            json.dump(message_list, output, indent=4)
-                                          
-                            print(sending)
-                                         
-                            output.close()
-                            break
+                     self.disconnections()
+                     break
                 
                 message = json.loads(data.decode("utf-8"))
                 print(message)
