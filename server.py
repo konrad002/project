@@ -8,6 +8,7 @@ import keyboard
 import json
 from datetime import datetime
 import os
+import time
 hostname = str(socket.gethostname())
 HOST = socket.gethostbyname(hostname)
 
@@ -100,10 +101,7 @@ class window(QWidget):
                         r = json.load(output)
                         
                         for k in r:
-                              if(k["user"] == "client"):
-                                    client_username = k["username"] #TODO constantly reassigns client_name. please change
-                              else:
-                                    username = k["username"]
+                              
                               messagesSent.append((k["user"], k["username"], k["message"], k["time"]))
                         print(r)
                         
@@ -112,15 +110,33 @@ class window(QWidget):
                         print("run?")
                         print(messagesSent)
                         output.close()
-                        
-                        
+                   with open("temp-username.json", "r") as read:
+                        r2 = json.load(read)
+                        client_username = r2["client_user"]
+                        username = r2["server_user"]
+                        read.close()
+                   print("surely this gets printed out no?")
+                   while True:
+                        if(conn == None):
+                              label4 = QMessageBox()
+                              label4.setText("Waiting to reconnect... ")
+                              label4.setStyleSheet("")
+                              QTimer.singleShot(3000, label4.close)
+                              if(os.path.exists("temp-server.json") == False):
+                                   return
+                              label4.exec_()
+                              
+                        else:
+                            
+                             return
+                             
             elif(r == QMessageBox.Cancel):
                  os.remove("temp-server.json")
-                 
+                 os.remove("temp-username.json")
                  self.set_username()
             else:
                  pass
-
+         
          else:
             self.set_username()
               
@@ -142,14 +158,18 @@ class window(QWidget):
             
       
       
-      while True:
                   
+      while True:
+             
             conn, addr = s.accept()
             
             
+            print("j")
             pastConnections["server"] = username
             pastConnections["client"] = client_username
             
+                      
+                 
             if(conn != None and len(pastConnections) > 2 ):
                   
                   print("error")
@@ -158,10 +178,21 @@ class window(QWidget):
 
             elif(conn == None):
                  
-                 print("how did we get here?")
+                  print("Still waiting for client to reconnect.")
+                  s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
+                  s.bind((HOST, PORT))
+                      
+                  s.listen(2)
+                  conn, addr = s.accept()
+                  print(conn, addr)
+                  if(s.fileno() != -1):
+                       print("Client has reconnected.")
             elif(conn != None):
                  QTimer.singleShot(0, self.show_window)
-                 
+            
+            
+
+              
 
             
             print(pastConnections)
@@ -186,6 +217,10 @@ class newWindow(QMainWindow):
             self.resize(1000,1000)
             self.setWindowTitle("Server app")
             navbar = self.menuBar()
+            
+            
+            
+            navbar.addMenu(username)
 
             self.new_signal.connect(self.update_label)
             
@@ -228,6 +263,7 @@ class newWindow(QMainWindow):
            conn.close()
            if(os.path.exists("temp-server.json")):
                   os.remove("temp-server.json")
+                  os.remove("temp-username.json")
                  
            exit()
             
@@ -296,8 +332,12 @@ class newWindow(QMainWindow):
                   return
             print(len(messagesSent))
             if(len(message) > 256):
-                  print("Message is too long! Maximum length 256")
+                  alert3 = QMessageBox()
+                  alert3.setText("Message is too long.\n Maximum length is 256.")
+                  alert3.exec_()
+                  self.message.setText("")
                   return
+            
             global timeSent
             timeSent = datetime.now().strftime("%H:%M")
             messagesSent.append(("server", username, message, timeSent))
@@ -316,19 +356,21 @@ class newWindow(QMainWindow):
             self.new_signal.emit(message)
             
       def disconnections(self):
-           
+           global s,conn
            if(disconnected_from_receive):
-                label2 = QMessageBox()
-                label2.setText("Client has disconnected")
-                label2.exec_()
+                label2 = QLabel()
+                self.timer = QTimer() #TODO fix this
+                label2.setText("Client has disconnected.\n \n Attempting to reconnect.")
+                self.timerState = True
+                
 
            print("disconnected")
            with open('temp-server.json', 'w') as output:
             if(os.path.getsize("temp-server.json")):
                   os.remove("temp-server.json")
                   output.close()
-            elif(os.path.getsize() == []):
-                 return
+           
+                 
             else:
                   message_list = []
                   for something in messagesSent:
@@ -340,12 +382,30 @@ class newWindow(QMainWindow):
                          "time" : something[3]
                          }
                         message_list.append(sending)
+                  print(message_list)
+                  if(message_list == []):
+                       
+                       output.close()
+                       os.remove("temp-server.json")
+                       exit()
+                  print("when does this get run?")
                   json.dump(message_list, output, indent=4)
                                           
                   print(sending)
                                          
                   output.close()
-            exit()        
+           with open("temp-username.json", "w") as username_output:
+                  
+                  sending = {
+                       "client_user": client_username,
+                       "server_user" : username
+                  }
+                  pastConnections["client"] = sending["client_user"]
+                  pastConnections["server"] = sending["server_user"]
+                  json.dump(sending, username_output)
+                  username_output.close()
+                  
+           
       def receive(self):
             global conn, timeSent2, client_username, disconnected_from_receive
             
