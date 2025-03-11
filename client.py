@@ -151,11 +151,15 @@ class newWindow(QMainWindow):
             super().__init__()
             self.resize(1000,1000)
             self.setWindowTitle("Client app")
-            navbar = self.menuBar()
+            self.navbar = self.menuBar()
             
             
-            navbar.addMenu(username_input)
-            exit = QAction("Exit", self)
+            self.navbar.addMenu(username_input)
+            global r
+            r = ""
+            self.status = self.navbar.addMenu(r)
+            self.status.setStyleSheet("QMenuBar::indicator {color: red;}")
+            
             self.new_signal.connect(self.update_label)
 
             thread = threading.Thread(target=self.receive, daemon = True)
@@ -297,10 +301,11 @@ class newWindow(QMainWindow):
         self.new_signal.emit(message)  
         
       def disconnections(self):
+           global r
            if(disconnected_from_receive):
-              label2 = QMessageBox()
-              label2.setText("Server has disconnected")
-              label2.exec_()
+                r = "Server has disconnected. Attempting to reconnect."
+                
+                self.navbar.addMenu(r)
            with open('temp-server.json', 'w') as output:
                 
                 message_list = []

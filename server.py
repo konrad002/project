@@ -216,20 +216,24 @@ class newWindow(QMainWindow):
             print("here")
             self.resize(1000,1000)
             self.setWindowTitle("Server app")
-            navbar = self.menuBar()
+            self.navbar = self.menuBar()
             
             
             
-            navbar.addMenu(username)
+            self.navbar.addMenu(username)
 
+            
+            
+            r = ""
+            self.status = self.navbar.addMenu(r)
+            self.status.setStyleSheet("QMenuBar::indicator {color: red;}")
+            
             self.new_signal.connect(self.update_label)
             
             thread2 = threading.Thread(target= self.receive, daemon = True)
-            thread2.start()
+            thread2.start() 
 
-            self.alert = QStatusBar()
-            self.setStatusBar = (self.alert)
-            self.alert.showMessage("Ready", 20000)
+           
 
             central = QWidget()
             self.setCentralWidget(central)
@@ -243,6 +247,7 @@ class newWindow(QMainWindow):
             self.exit = QPushButton("End", self)
             self.exit.setGeometry(50, 50, 50, 50)
             self.exit.clicked.connect(lambda: self.exitConnection())
+            
             self.client.addWidget(self.message)
             self.client.addWidget(self.button7)
             self.client.addWidget(self.exit)
@@ -356,12 +361,14 @@ class newWindow(QMainWindow):
             self.new_signal.emit(message)
             
       def disconnections(self):
-           global s,conn
+           global s,conn, r
            if(disconnected_from_receive):
-                label2 = QLabel()
+                
                 self.timer = QTimer() #TODO fix this
-                label2.setText("Client has disconnected.\n \n Attempting to reconnect.")
-                self.timerState = True
+                
+                r = "Client has disconnected. Attempting to reconnect."
+                
+                self.navbar.addMenu(r)
                 
 
            print("disconnected")
@@ -387,6 +394,7 @@ class newWindow(QMainWindow):
                        
                        output.close()
                        os.remove("temp-server.json")
+                       os.remove("temp-username.json")
                        exit()
                   print("when does this get run?")
                   json.dump(message_list, output, indent=4)
