@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 messagesSent = []
 pastConnections = {}
 import os
+import time
+
 loading = False
 disconnected_from_receive = False
 
@@ -42,7 +44,7 @@ class window(QWidget):
         
        
         self.setLayout(self.layout)
-        if(os.path.exists("temp-server.json")):
+        if(os.path.exists("temp-client.json")):
             self.rr()
 
         
@@ -58,8 +60,8 @@ class window(QWidget):
               self.on_click()
               return
          elif(r == QMessageBox.Cancel):
-              os.remove("temp-server.json")
-              os.remove("temp-username.json")
+              os.remove("temp-client.json")
+              
               pass
          else:
               pass
@@ -76,11 +78,13 @@ class window(QWidget):
         
         
     
-        if(os.path.exists("temp-server.json")):
-            with open('temp-server.json', 'r') as output:
+        if(os.path.exists("temp-client.json")):
+            with open('temp-client.json', 'r') as output:
                 r = json.load(output)
-                        
-                for k in r:
+                username_input = r[0]["client_user"]
+                client_username = r[0]["server_user"]   
+                f = r[1:len(r)]     
+                for k in f:
                     
                     messagesSent.append((k["user"], k["username"], k["message"], k["time"]))
 
@@ -93,11 +97,7 @@ class window(QWidget):
                 print("run?")
                 print(messagesSent)
                 output.close()
-            with open("temp-username.json", "r") as read:
-                 r2 = json.load(read)
-                 username_input = r2["client_user"]
-                 client_username = r2["server_user"]
-                 read.close()
+            
             hostname = str(socket.gethostname())
             HOST = socket.gethostbyname(hostname)
                 
@@ -191,8 +191,9 @@ class newWindow(QMainWindow):
 
       def exitConnection(self):
            s.close()
-           if(os.path.exists("temp-server.json")):
-                  os.remove("temp-server.json")
+           if(os.path.exists("temp-client.json")):
+                  os.remove("temp-client.json")
+                  
                   
            exit()
       def update_label(self): #TODO: Fix this god awful code.
@@ -302,13 +303,23 @@ class newWindow(QMainWindow):
         
       def disconnections(self):
            global r
-           if(disconnected_from_receive):
+           if(disconnected_from_receive and s.fileno() == -1):
                 r = "Server has disconnected. Attempting to reconnect."
                 
                 self.navbar.addMenu(r)
-           with open('temp-server.json', 'w') as output:
-                
+
+           with open('temp-client.json', 'w') as output:
+                if(os.path.getsize("temp-client.json")):
+                  os.remove("temp-client.json")
+                  output.close()
                 message_list = []
+                sending = {
+                       "client_user": username_input,
+                       "server_user" : client_username
+                  }
+                pastConnections["client"] = sending["client_user"]
+                pastConnections["server"] = sending["server_user"]
+                message_list.append(sending)
                 for something in messagesSent:
                     sending = {
                         "user": something[0],
@@ -320,7 +331,8 @@ class newWindow(QMainWindow):
                 print(message_list)
                 if(message_list == []):
                      output.close()
-                     os.remove("temp-server.json")
+                     os.remove("temp-client.json")
+                     print("ooga booga?")
                      exit()
                      
                 print("when does this get run?")
@@ -328,14 +340,20 @@ class newWindow(QMainWindow):
                                           
                                  
                 output.close()
-           exit()         
-           while True:
+           exit()
+                 
+           for z in range(1, 15, 2):
             if(s.fileno() == -1):
-                s.close()
-                print("Connection has been closed")
+                time.sleep(z)
+                print("not reconnected just yet")
+                
             else:
                 print("Server has reconnected")
-                break
+                
+            if(s.fileno() != -1):
+                 print("nice")
+            else:
+                 exit()
       def receive(self):
         
         global client_username, timeSent2, data, disconnected_from_receive
