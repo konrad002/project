@@ -9,6 +9,8 @@ import json
 from datetime import datetime
 import os
 import time
+import sys
+
 hostname = str(socket.gethostname())
 HOST = socket.gethostbyname(hostname)
 
@@ -18,7 +20,7 @@ conn = None
 pastConnections = {}
 loading = False
 disconnected_from_receive = False
-
+disconnected = False
                   
                   
             
@@ -36,7 +38,7 @@ class window(QWidget):
       thread.start()
       global client_username
       client_username = None
-      
+      self.total = 0
       
       self.get_username()
       print("rsaf")
@@ -86,7 +88,7 @@ class window(QWidget):
             self.set_username()
     def get_username(self):
          
-         global username, s, client_username, loading
+         global username, s, client_username, loading, disconnected
          
          if(os.path.exists("temp-server.json")):
             
@@ -102,7 +104,8 @@ class window(QWidget):
                         print(r)
                         client_username = r[0]["client_user"]
                         username = r[0]["server_user"] 
-                        f = r[1:len(r)]
+                        disconnected = r[1]["disconnected"]
+                        f = r[2:len(r)]
                         for k in f:
                               
                               messagesSent.append((k["user"], k["username"], k["message"], k["time"]))
@@ -115,19 +118,21 @@ class window(QWidget):
                         output.close()
                    
                    print("surely this gets printed out no?")
+                   
                    while True:
-                        if(conn == None):
-                              label4 = QMessageBox()
-                              label4.setText("Waiting to reconnect... ")
-                              label4.setStyleSheet("")
-                              QTimer.singleShot(3000, label4.close)
-                              if(os.path.exists("temp-server.json") == False):
-                                   return
-                              label4.exec_()
+                        if(conn == None and disconnected == False):
+                             print("no connection but also didnt disconnect. not sure how we got here.")
+                        elif(conn == None and disconnected == True): 
+                             label4 = QMessageBox()
+                             label4.setText("Waiting to reconnect... ")
+                             label4.setStyleSheet("")
+                             
+                             label4.setWindowTitle(username + " " + "relogin?")
+                             QTimer.singleShot(3000, label4.close)
                               
+                             label4.exec_()
                         else:
-                            
-                             return
+                            break
                              
             elif(r == QMessageBox.Cancel):
                  os.remove("temp-server.json")
@@ -169,26 +174,20 @@ class window(QWidget):
             
                       
                  
-            if(conn != None and len(pastConnections) > 2 ):
+            if(conn != None and self.total > 0):
                   
                   print("error")
-                  exit()
+                  
+                  
             
 
             elif(conn == None):
                  
                   print("Still waiting for client to reconnect.")
-                  s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
-                  s.bind((HOST, PORT))
-                      
-                  s.listen(2)
-                  conn, addr = s.accept()
-                  print(conn, addr)
-                  if(s.fileno() != -1):
-                       print("Client has reconnected.")
+                  
             elif(conn != None):
                  QTimer.singleShot(0, self.show_window)
-            
+                 self.total = self.total + 1
             
 
               
@@ -361,6 +360,7 @@ class newWindow(QMainWindow):
             
       def disconnections(self):
            global s,conn, r
+           disconnected = True
            if(disconnected_from_receive and conn == None):
                 
                 self.timer = QTimer() #TODO fix this
@@ -390,6 +390,10 @@ class newWindow(QMainWindow):
                   pastConnections["client"] = sending["client_user"]
                   pastConnections["server"] = sending["server_user"]
                   message_list.append(sending)
+                  sending = {
+                       "disconnected" : disconnected
+                  }
+                  message_list.append(sending)
                   for something in messagesSent:
                                           
                         sending = {
@@ -413,19 +417,13 @@ class newWindow(QMainWindow):
                   print(sending)
                                          
                   output.close()
+
+           py = sys.executable
+           os.execv(py, [py] + sys.argv)
            
-           conn = None
-           for z in range(1, 12, 2):
-                if(conn == None):
-                     time.sleep(z)
-                     print("not reconnected just yet")
-                else:
-                     print("reconnected!")
-           if(s.fileno() != -1):
-                 print("nice")
-           else:
-                 exit()
-                     
+           
+                
+           
            
                   
            

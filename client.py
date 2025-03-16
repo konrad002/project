@@ -10,9 +10,11 @@ messagesSent = []
 pastConnections = {}
 import os
 import time
-
+import sys
 loading = False
 disconnected_from_receive = False
+disconnected = False
+s = None
 
 class window(QWidget):
     def __init__(self):
@@ -49,7 +51,7 @@ class window(QWidget):
 
         
     def rr(self):
-         global s
+         
          
          label_username = QMessageBox()
          label_username.setIcon(QMessageBox.Information)
@@ -62,13 +64,13 @@ class window(QWidget):
          elif(r == QMessageBox.Cancel):
               os.remove("temp-client.json")
               
-              pass
+              exit()
          else:
               pass
     def on_click(self):
         alert = QMessageBox()
-        global s, username_input, client_username, loading
-
+        global s, username_input, client_username, loading, disconnected
+        
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if(self.client != None):
                     print("does this get run?")
@@ -83,7 +85,8 @@ class window(QWidget):
                 r = json.load(output)
                 username_input = r[0]["client_user"]
                 client_username = r[0]["server_user"]   
-                f = r[1:len(r)]     
+                disconnected = r[1]["disconnected"]
+                f = r[2:len(r)]     
                 for k in f:
                     
                     messagesSent.append((k["user"], k["username"], k["message"], k["time"]))
@@ -100,15 +103,34 @@ class window(QWidget):
             
             hostname = str(socket.gethostname())
             HOST = socket.gethostbyname(hostname)
+            
+            while True: #TODO
+                res = s.connect_ex((HOST, 12345))
+                print(res)
+                if(res != 0):
+                    label4 = QMessageBox()
+                    label4.setText("Waiting to reconnect... 2 ")
+                    label4.setStyleSheet("")
+                    
+                    label4.setWindowTitle(username_input + " "+ "relogin?")
+                    
+                    QTimer.singleShot(3000, label4.close)
+                    label4.exec_()  
+                    print(s.fileno(), "gsgwe")
+                elif(res == 0):  
+                    
+                    break
                 
-            s.connect((HOST, 12345))
+            print("do we ever get here?")             
+            
+            
             
             self.close()
             self.hide()
             self.client = newWindow()
-            self.client.show()#
-            self.hide()
-            self.close()
+            self.client.show()
+            
+            
             return   
             
 
@@ -303,6 +325,7 @@ class newWindow(QMainWindow):
         
       def disconnections(self):
            global r
+           disconnected = True
            if(disconnected_from_receive and s.fileno() == -1):
                 r = "Server has disconnected. Attempting to reconnect."
                 
@@ -320,6 +343,11 @@ class newWindow(QMainWindow):
                 pastConnections["client"] = sending["client_user"]
                 pastConnections["server"] = sending["server_user"]
                 message_list.append(sending)
+                sending = {
+                     "disconnected" : disconnected
+                }
+                message_list.append(sending)
+
                 for something in messagesSent:
                     sending = {
                         "user": something[0],
@@ -340,20 +368,11 @@ class newWindow(QMainWindow):
                                           
                                  
                 output.close()
-           exit()
+
+           py = sys.executable
+           os.execv(py, [py] + sys.argv)
                  
-           for z in range(1, 15, 2):
-            if(s.fileno() == -1):
-                time.sleep(z)
-                print("not reconnected just yet")
-                
-            else:
-                print("Server has reconnected")
-                
-            if(s.fileno() != -1):
-                 print("nice")
-            else:
-                 exit()
+           
       def receive(self):
         
         global client_username, timeSent2, data, disconnected_from_receive
