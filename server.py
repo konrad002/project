@@ -40,7 +40,7 @@ class window(QWidget):
       client_username = None
       self.total = 0
       
-      self.get_username()
+      self.get_username(True)
       print("rsaf")
       self.resize(1000, 1000)
       self.setWindowTitle("Please wait for connection")
@@ -86,7 +86,7 @@ class window(QWidget):
             alert.setText("Please enter a username")
             alert.exec_()
             self.set_username()
-    def get_username(self):
+    def get_username(self, isReady):
          
          global username, s, client_username, loading, disconnected
          
@@ -94,7 +94,7 @@ class window(QWidget):
             
             label_username = QMessageBox()
             label_username.setIcon(QMessageBox.Information)
-            label_username.setText("Want to relogin to past connection?")
+            label_username.setText("Want to relogin to past connection? 2")
             label_username.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             r = label_username.exec_()
             if(r == QMessageBox.Ok):
@@ -120,9 +120,8 @@ class window(QWidget):
                    print("surely this gets printed out no?")
                    
                    while True:
-                        if(conn == None and disconnected == False):
-                             print("no connection but also didnt disconnect. not sure how we got here.")
-                        elif(conn == None and disconnected == True): 
+                        
+                        if(conn == False):
                              label4 = QMessageBox()
                              label4.setText("Waiting to reconnect... ")
                              label4.setStyleSheet("")
@@ -131,7 +130,13 @@ class window(QWidget):
                              QTimer.singleShot(3000, label4.close)
                               
                              label4.exec_()
+                             
+                             
+                             
+                             
                         else:
+                            print(conn)
+                            
                             break
                              
             elif(r == QMessageBox.Cancel):
@@ -164,14 +169,25 @@ class window(QWidget):
       
                   
       while True:
-             
+            
+                  
             conn, addr = s.accept()
-            
-            
-            print("j")
-            pastConnections["server"] = username
-            pastConnections["client"] = client_username
-            
+            print("//")
+            if(os.path.exists("temp-server.json")):
+                  conn.sendall(b"ready")
+                  print("//??")
+                  confirm = conn.recv(1024).decode()
+                  time.sleep(3)
+                  if(confirm == "confirmed"):
+                        pastConnections["server"] = username
+                        pastConnections["client"] = client_username
+                        print("???")
+                  else:
+                        conn.close()
+                        print("jk")
+            else:
+                 pastConnections["server"] = username
+                 pastConnections["client"] = client_username
                       
                  
             if(conn != None and self.total > 0):
@@ -443,6 +459,9 @@ class newWindow(QMainWindow):
                              break
                         try:
                               data = conn.recv(1024)
+                              if(data == "ready"):
+                                   self.get_username(False)
+                                   break
                               print("this has been run")
                         except:
                               disconnected_from_receive = True

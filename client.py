@@ -59,7 +59,7 @@ class window(QWidget):
          label_username.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
          r = label_username.exec_()
          if(r == QMessageBox.Ok):
-              self.on_click()
+              self.on_click(False)
               return
          elif(r == QMessageBox.Cancel):
               os.remove("temp-client.json")
@@ -67,7 +67,7 @@ class window(QWidget):
               exit()
          else:
               pass
-    def on_click(self):
+    def on_click(self, isReady):
         alert = QMessageBox()
         global s, username_input, client_username, loading, disconnected
         
@@ -104,10 +104,10 @@ class window(QWidget):
             hostname = str(socket.gethostname())
             HOST = socket.gethostbyname(hostname)
             
+            
             while True: #TODO
-                res = s.connect_ex((HOST, 12345))
-                print(res)
-                if(res != 0):
+                
+                if(s.connect_ex((HOST, 12345)) != 0 and isReady == False):
                     label4 = QMessageBox()
                     label4.setText("Waiting to reconnect... 2 ")
                     label4.setStyleSheet("")
@@ -117,7 +117,12 @@ class window(QWidget):
                     QTimer.singleShot(3000, label4.close)
                     label4.exec_()  
                     print(s.fileno(), "gsgwe")
-                elif(res == 0):  
+                    print(isReady)
+                    data = s.recv(1024).decode()
+                    if(data == "ready"):
+                         isReady = True
+                elif(isReady == True): 
+                    s.sendall(b"confirmed")
                     
                     break
                 
@@ -382,9 +387,12 @@ class newWindow(QMainWindow):
             print(ready)
             
             if(ready):
+                
+                     
                 try:
                     data = s.recv(1024)
-
+                    print(data)
+                    
                 except:
                      disconnected_from_receive = True
                      self.disconnections()
