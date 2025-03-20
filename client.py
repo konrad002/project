@@ -118,9 +118,12 @@ class window(QWidget):
                     label4.exec_()  
                     print(s.fileno(), "gsgwe")
                     print(isReady)
-                    data = s.recv(1024).decode()
-                    if(data == "ready"):
-                         isReady = True
+                    try:
+                         data = s.recv(1024).decode()
+                         if(data == "ready"):
+                              isReady = True
+                    except:
+                         pass
                 elif(isReady == True): 
                     s.sendall(b"confirmed")
                     
