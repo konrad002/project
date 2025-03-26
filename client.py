@@ -14,44 +14,54 @@ import sys
 loading = False
 disconnected_from_receive = False
 disconnected = False
+total_users = 0
+hostname = str(socket.gethostname())
+HOST = socket.gethostbyname(hostname)
 s = None
+state0 = False
 
 class window(QWidget):
     def __init__(self):
         super().__init__()
         self.client = None
-        
+        self.reconnecting = False
         global client_username
         client_username = None
         
-        self.mainlabel = QLabel("Client login ")
-        self.username = QLabel("Enter your username")
-        self.textbox3 = QLineEdit(self)
-        self.label2 = QLabel("Enter IP and port number to connect")
-        self.textbox1 = QLineEdit(self)
-        self.textbox1.setPlaceholderText("Type IP address")
-        self.textbox2 = QLineEdit(self)
-        self.textbox2.setPlaceholderText("Type Port number")
-        self.button = QPushButton('Connect')
-        self.button2 = QPushButton('Go back')
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.username)
-        self.layout.addWidget(self.textbox3)
-        self.layout.addWidget(self.label2)
-        self.layout.addWidget(self.textbox1)
-        self.layout.addWidget(self.textbox2)
-        self.layout.addWidget(self.button)
-        #keyboard.on_press_key("Enter", lambda _: self.on_click()) //use later
-        self.button.clicked.connect(self.on_click)
         
-       
-        self.setLayout(self.layout)
         if(os.path.exists("temp-client.json")):
+            self.reconnecting = True
             self.rr()
+            
 
-        
+        if(self.reconnecting == False):
+             self.ui_window()
+        print(self.reconnecting, "this is self.reconnecting")
+
+    def ui_window(self):
+          self.mainlabel = QLabel("Client login ")
+          self.username = QLabel("Enter your username")
+          self.textbox3 = QLineEdit(self)
+          self.label2 = QLabel("Enter IP and port number to connect")
+          self.textbox1 = QLineEdit(self)
+          self.textbox1.setPlaceholderText("Type IP address")
+          self.textbox2 = QLineEdit(self)
+          self.textbox2.setPlaceholderText("Type Port number")
+          self.button = QPushButton('Connect')
+          self.button2 = QPushButton('Go back')
+          self.layout = QVBoxLayout()
+          self.layout.addWidget(self.username)
+          self.layout.addWidget(self.textbox3)
+          self.layout.addWidget(self.label2)
+          self.layout.addWidget(self.textbox1)
+          self.layout.addWidget(self.textbox2)
+          self.layout.addWidget(self.button)
+          #keyboard.on_press_key("Enter", lambda _: self.on_click()) //use later
+          self.button.clicked.connect(self.on_click)
+
+          self.setLayout(self.layout)    
+
     def rr(self):
-         
          
          label_username = QMessageBox()
          label_username.setIcon(QMessageBox.Information)
@@ -67,15 +77,25 @@ class window(QWidget):
               exit()
          else:
               pass
+    
+    def run_app(self):
+          self.close()
+          self.client = newWindow()
+          self.client.show()
+          
     def on_click(self, isReady):
         alert = QMessageBox()
-        global s, username_input, client_username, loading, disconnected
+        global s, username_input, client_username, loading, total_users
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+        
+     
+             
         if(self.client != None):
-                    print("does this get run?")
+               print("does this get run?")
                     
-                    exit()
+               exit()
                         
         
         
@@ -85,7 +105,7 @@ class window(QWidget):
                 r = json.load(output)
                 username_input = r[0]["client_user"]
                 client_username = r[0]["server_user"]   
-                disconnected = r[1]["disconnected"]
+                total_users = r[1]["total_users"]
                 f = r[2:len(r)]     
                 for k in f:
                     
@@ -101,42 +121,49 @@ class window(QWidget):
                 print(messagesSent)
                 output.close()
             
-            hostname = str(socket.gethostname())
-            HOST = socket.gethostbyname(hostname)
             
             
-            while True: #TODO
-                
-                if(s.connect_ex((HOST, 12345)) != 0 and isReady == False):
-                    label4 = QMessageBox()
-                    label4.setText("Waiting to reconnect... 2 ")
-                    label4.setStyleSheet("")
+            
+            while(isReady == False): #TODO
                     
-                    label4.setWindowTitle(username_input + " "+ "relogin?")
+               label4 = QMessageBox()
+               label4.setText("Waiting to reconnect... 2 ")
+               label4.setStyleSheet("")
                     
-                    QTimer.singleShot(3000, label4.close)
-                    label4.exec_()  
-                    print(s.fileno(), "gsgwe")
-                    print(isReady)
-                    try:
-                         data = s.recv(1024).decode()
-                         if(data == "ready"):
-                              isReady = True
-                    except:
-                         pass
-                elif(isReady == True): 
-                    s.sendall(b"confirmed")
+               label4.setWindowTitle(username_input + " "+ "relogin?")
                     
-                    break
+               QTimer.singleShot(2000, label4.close)     
+               label4.exec_()  
+               print(s.fileno(), "gsgwe")
+               print(isReady)
+                    
+               try:
+                         
+                    s.connect((HOST, 12345)) 
+                    print("connected just now")
+                    data = s.recv(1024).decode()
+                    print(data)
+                    if(data == "ready"):
+                         print("ready s")
+                         isReady = True
+                         
+                         s.sendall(b"confirmed")
+                    
+                    
+
+               except Exception:
+                    print("does it get an exception?")
+                    pass
+                    
+
+              
                 
             print("do we ever get here?")             
             
             
             
-            self.close()
-            self.hide()
-            self.client = newWindow()
-            self.client.show()
+            print("tiems?")
+            self.run_app()
             
             
             return   
@@ -148,7 +175,7 @@ class window(QWidget):
             
             s.connect((self.textbox1.text(), int(self.textbox2.text())))
             
-            
+            total_users = total_users + 1
             print(pastConnections)
             username_input = self.textbox3.text()
             pastConnections["user"] = "client"
@@ -157,9 +184,7 @@ class window(QWidget):
             print(username_input, client_username)
             if(username_input == client_username):
                  print("client and server username's are the same!!!!")
-            self.close()
-            self.client = newWindow()
-            self.client.show()
+            self.run_app()
             print("connected to server")
             
 
@@ -170,7 +195,7 @@ class window(QWidget):
             alert.setStandardButtons(QMessageBox.StandardButton.Ok)
             alert.exec_()
             
-            
+
     
          
      
@@ -179,6 +204,7 @@ class newWindow(QMainWindow):
       def __init__(self):
             
             super().__init__()
+            self.handler = False
             self.resize(1000,1000)
             self.setWindowTitle("Client app")
             self.navbar = self.menuBar()
@@ -204,28 +230,27 @@ class newWindow(QMainWindow):
             self.message.setPlaceholderText("Type in a message to send")
             self.button7.setGeometry(50, 50, 50, 50)
             self.button7.clicked.connect(lambda: self.send(self.message.text()))
-            self.exit = QPushButton("End", self)
-            self.exit.setGeometry(50, 50, 50, 50)
-            self.exit.clicked.connect(lambda: self.exitConnection())
+            
+            
             self.client.addWidget(self.message)
             self.client.addWidget(self.button7)
-            self.client.addWidget(self.exit)
+            
             self.button7.setStyleSheet("border-radius: 10px;")
-            keyboard.on_press_key("Enter", lambda _: self.send(self.message.text()))#
+            keyboard.on_press_key("Enter", lambda _: self.send(self.message.text()))
+
             self.new_signal.emit("far")
             central.setLayout(self.client)
 
       def closeEvent(self, event):
-           self.disconnections()  
+           print("z2")
+           self.parse_temp()  
            event.accept()     
 
-      def exitConnection(self):
-           s.close()
-           if(os.path.exists("temp-client.json")):
-                  os.remove("temp-client.json")
+      
                   
                   
-           exit()
+                  
+           
       def update_label(self): #TODO: Fix this god awful code.
                        
             global client_username, loading
@@ -256,11 +281,7 @@ class newWindow(QMainWindow):
                               self.client.addWidget(self.label)
             else:
                  for user, username, msg, time in messagesSent:
-                        print(msg)
-                        print(user)
-                  
-            
-                        print(loading)
+                        
                         if(user == "client"):
                               print("run?, how many times?")
                         
@@ -321,9 +342,13 @@ class newWindow(QMainWindow):
         }
         
         
-        data = json.dumps(sending)
-        s.sendall(data.encode("utf-8"))
-                
+        try:
+          data = json.dumps(sending)
+          s.sendall(data.encode("utf-8"))
+          print("sent from client")
+        except Exception as e:
+             print(e)
+             self.message.setText("")  
 
         
         print("does this get run here?")
@@ -332,13 +357,38 @@ class newWindow(QMainWindow):
         self.new_signal.emit(message)  
         
       def disconnections(self):
-           global r
-           disconnected = True
-           if(disconnected_from_receive and s.fileno() == -1):
+           global r, loading
+           print("disconnections called how many times?")
+           
+           
+           if(disconnected_from_receive):
                 r = "Server has disconnected. Attempting to reconnect."
-                
+                reconnected = False
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.navbar.addMenu(r)
+                for k in [1, 2, 3, 5]:
+                     time.sleep(k)
+                     
+                     
+                     try:
+                         s.connect((HOST, 12345))
+                         ready = s.recv(1024).decode()
+                         print(4)
+                         if(ready == "ready"):
+                              s.sendall(b"confirmed")
+                              reconnected = True
+                              break
+                              
+                     except:
+                         print("exception")
+                     
+                print("done")
+                if(not reconnected):
+                     exit()
+                     
+                loading = True
 
+      def parse_temp(self):
            with open('temp-client.json', 'w') as output:
                 if(os.path.getsize("temp-client.json")):
                   os.remove("temp-client.json")
@@ -351,8 +401,9 @@ class newWindow(QMainWindow):
                 pastConnections["client"] = sending["client_user"]
                 pastConnections["server"] = sending["server_user"]
                 message_list.append(sending)
+                
                 sending = {
-                     "disconnected" : disconnected
+                     "total_users" : total_users
                 }
                 message_list.append(sending)
 
@@ -377,8 +428,7 @@ class newWindow(QMainWindow):
                                  
                 output.close()
 
-           py = sys.executable
-           os.execv(py, [py] + sys.argv)
+           
                  
            
       def receive(self):
@@ -395,22 +445,28 @@ class newWindow(QMainWindow):
                 try:
                     data = s.recv(1024)
                     print(data)
-                    
-                except:
+                    if(data.decode("utf-8") == "ready"):
+                         print("ready was sent from server!")
+                         pass
+                    else:
+                         message = json.loads(data.decode("utf-8"))
+                         print(message)
+                         user = message["user"]
+                         client_username = message["username"]
+                         message_received = message["message"]
+                         timeSent2 = message["time"]
+                
+                         messagesSent.append((user, client_username, message_received, timeSent2))
+                         print(messagesSent)
+                         self.new_signal.emit(message_received)     
+                except Exception as e:
+                     print(e)
                      disconnected_from_receive = True
-                     self.disconnections()
+                     print("z?")
+                     QTimer.singleShot(0, self.disconnections)
                      break
                 
-                message = json.loads(data.decode("utf-8"))
-                print(message)
-                user = message["user"]
-                client_username = message["username"]
-                message_received = message["message"]
-                timeSent2 = message["time"]
-                
-                messagesSent.append((user, client_username, message_received, timeSent2))
-                print(messagesSent)
-                self.new_signal.emit(message_received)
+               
                 
                 
                 
@@ -424,5 +480,8 @@ class newWindow(QMainWindow):
 
 app = QApplication([])
 window = window()
-window.show()
+if(os.path.exists("temp-client.json")):
+     pass
+else:
+     window.show()
 app.exec()
