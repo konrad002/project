@@ -366,18 +366,19 @@ class newWindow(QMainWindow):
                 reconnected = False
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.navbar.addMenu(r)
-                for k in [1, 2, 3, 5]:
+                for k in [1, 2, 4, 8, 12]:
                      time.sleep(k)
                      
                      
                      try:
+                         print(1)
                          s.connect((HOST, 12345))
-                         ready = s.recv(1024).decode()
-                         print(4)
-                         if(ready == "ready"):
-                              s.sendall(b"confirmed")
-                              reconnected = True
-                              break
+                         print(2)
+                         s.sendall(b"confirmed")
+                         print(3)
+                         reconnected = True                                                                                                
+                         break
+                        
                               
                      except:
                          print("exception")
@@ -463,7 +464,9 @@ class newWindow(QMainWindow):
                      print(e)
                      disconnected_from_receive = True
                      print("z?")
+                     QTimer.singleShot(0, self.parse_temp)
                      QTimer.singleShot(0, self.disconnections)
+                     
                      break
                 
                

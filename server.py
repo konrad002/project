@@ -153,8 +153,10 @@ class Window(QWidget):
     def something(self):
          global isReady
          isReady = False  
-         self.thread = threading.Thread(target=self.connect, daemon = True)
-         self.thread.start()
+         if(False):
+            self.thread = threading.Thread(target=self.connect, daemon = True)
+            self.thread.start()
+
          while(isReady == False):
             print(isReady, "fhiasge")        
             
@@ -175,12 +177,13 @@ class Window(QWidget):
             
     
     def connect(self):
+      
       count = 0
       print("are we even here?")
       print("are we here?")
           
       
-      global s, conn, addr, client_username, username, total_users
+      global s, conn, addr, client_username, username, total_users, isReady
       
       try:
           s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
@@ -199,21 +202,10 @@ class Window(QWidget):
             
       
 
-      QTimer.singleShot(0, self.once_connected)
       print("connected now")
-
-    def if_connected(self):
-         try:
-              s.getpeername()
-              return True
-         except:
-              return False
-         
-    def once_connected(self):
-           global isReady
-           
       
-           if(os.path.exists("temp-server.json") and state0 == True):
+      
+      if(os.path.exists("temp-server.json") and state0 == True):
                   
              
             print("//??")
@@ -235,12 +227,21 @@ class Window(QWidget):
                         
                   
                         
-            elif(os.path.exists("temp-server.json") == False):
-                  print("fsf")
-                  pastConnections["server"] = username
-                  pastConnections["client"] = client_username
-                  QTimer.singleShot(0, self.show_window)
-                  
+      elif(os.path.exists("temp-server.json") == False):
+            print("fsf")
+            pastConnections["server"] = username
+            pastConnections["client"] = client_username
+            QTimer.singleShot(0, self.show_window)
+      
+
+    def if_connected(self):
+         try:
+              s.getpeername()
+              return True
+         except:
+              return False
+         
+    
             
       
                   
@@ -252,7 +253,7 @@ class Window(QWidget):
             
 
     def show_window(self):
-         
+         print("was this even run?")
          self.close()
          self.client_socket = newWindow(self)
          self.client_socket.show()
@@ -264,6 +265,7 @@ class Window(QWidget):
          print(self.active_windows)
          for i in self.active_windows:
               if(self.if_connected == False):
+                   print("here now")
                    self.close()    
     
               
@@ -432,19 +434,20 @@ class newWindow(QMainWindow):
            self.thread.start()
            self.navbar.addMenu(r)
            
-           for k in [1, 2, 3, 5]:
+           for k in [1, 2, 4, 8, 12]:
                      time.sleep(k)
                      print(self.thread.is_alive())
-                     if(conn != None):
-                        try:
-                              print(3)
-                              s.sendall(b"ready")
-                              print(4)
-                              reconnected = True
-                              break
+                     
+                     try:
                               
-                        except:
-                              print("exception")
+                        print(3)
+                        conn.sendall(b"ready")
+                        print(4)
+                        reconnected = True
+                        break
+                              
+                     except:
+                        print("exception")
 
            if(not reconnected):
                 exit()
@@ -535,7 +538,9 @@ class newWindow(QMainWindow):
                               print("z?")
                               print(e)
                               disconnected_from_receive = True
+                              QTimer.singleShot(0, self.parse_temp)
                               QTimer.singleShot(0, self.disconnections)
+                              
                               
                               
                               break
