@@ -408,9 +408,13 @@ class newWindow(QMainWindow):
                 
                 print(44)
                 print(s.getpeername())
+                return
+           
       def reset(self):
+          
           self.navbar.clear() 
           self.navbar.addMenu(username_input)
+          
 
       def parse_temp(self):
            with open('temp-client.json', 'w') as output:

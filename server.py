@@ -120,6 +120,7 @@ class Window(QWidget):
                         print(r)
                         client_username = r[0]["client_user"]
                         username = r[0]["server_user"] 
+                        print(username, "this is username at line 123")
                         total_users = r[1]["total_users"]
                         f = r[2:len(r)]
                         for k in f:
@@ -132,9 +133,9 @@ class Window(QWidget):
                         print("run?")
                         print(messagesSent)
                         output.close()
-                   
+                        state0 = True
                    print("surely this gets printed out no?")
-                   state0 = True
+                   
                    self.something()
 
                              
@@ -220,11 +221,15 @@ class Window(QWidget):
             confirm = conn.recv(1024).decode()
             print(confirm, "this is confirm")
             if(confirm == "confirmed"):
-                        
-                  pastConnections["server"] = username
-                  pastConnections["client"] = client_username
-                  print("?")
-                        
+                  z = False
+                  while(z):
+                    try:      
+                         pastConnections["server"] = username
+                         pastConnections["client"] = client_username
+                         z = False
+                         print("username and client username have both been defined")
+                    except:
+                         pass
                   isReady = True
                   if(sgf != None):
                        print("xz")
