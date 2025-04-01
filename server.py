@@ -115,6 +115,7 @@ class Window(QWidget):
                   r = label_username.exec_()
                   if(r == QMessageBox.Ok):
                    
+<<<<<<< HEAD
                         with open('temp-server.json', 'r') as output:
                               r = json.load(output)
                               print(r)
@@ -124,12 +125,24 @@ class Window(QWidget):
                               total_users = r[1]["total_users"]
                               f = r[2:len(r)]
                               for k in f:
+=======
+                   with open('temp-server.json', 'r') as output:
+                        r = json.load(output)
+                        print(r)
+                        client_username = r[0]["client_user"]
+                        username = r[0]["server_user"] 
+                        print(username, "this is username at line 123")
+                        total_users = r[1]["total_users"]
+                        f = r[2:len(r)]
+                        for k in f:
+>>>>>>> 12f875f05d771e6f8bb11142876ffebaefd8430b
                               
                                     messagesSent.append((k["user"], k["username"], k["message"], k["time"]))
                               print(r)
                         
                               loading = True
                         
+<<<<<<< HEAD
                               print("run?")
                               print(messagesSent)
                               output.close()
@@ -137,6 +150,15 @@ class Window(QWidget):
                         print("surely this gets printed out no?")
                    
                         self.something()
+=======
+                        print("run?")
+                        print(messagesSent)
+                        output.close()
+                        state0 = True
+                   print("surely this gets printed out no?")
+                   
+                   self.something()
+>>>>>>> 12f875f05d771e6f8bb11142876ffebaefd8430b
 
                              
                   elif(r == QMessageBox.Cancel):
@@ -230,6 +252,7 @@ class Window(QWidget):
             if(os.path.exists("temp-server.json")):
                   
              
+<<<<<<< HEAD
                   print("//??")
                   conn.sendall(b"ready")
                   print("s")
@@ -248,17 +271,61 @@ class Window(QWidget):
                                     pass
                         isReady = True
                         self.reuse()
+=======
+            print("//??")
+            conn.sendall(b"ready")
+            print("s")
+            confirm = conn.recv(1024).decode()
+            print(confirm, "this is confirm")
+            if(confirm == "confirmed"):
+                  z = False
+                  while(z):
+                    try:      
+                         pastConnections["server"] = username
+                         pastConnections["client"] = client_username
+                         z = False
+                         print("username and client username have both been defined")
+                    except:
+                         pass
+                  isReady = True
+                  if(sgf != None):
+                       print("xz")
+                       navbar.clear()
+                       navbar.addMenu(username)
+                       loading = None
+                  else:  
+                    print("zx2")
+                    sgf = 1
+                    QTimer.singleShot(0, self.show_window)
+>>>>>>> 12f875f05d771e6f8bb11142876ffebaefd8430b
                         
                         
                         
                   
                         
+<<<<<<< HEAD
             elif(os.path.exists("temp-server.json") == False):
                   isReady = True
                   print("fsf")
                   pastConnections["server"] = username
                   pastConnections["client"] = client_username
                   self.reuse()
+=======
+      elif(os.path.exists("temp-server.json") == False):
+            isReady = True
+            print("fsf")
+            pastConnections["server"] = username
+            pastConnections["client"] = client_username
+            if(sgf != None):
+               print("xz")
+               navbar.clear()
+               navbar.addMenu(username)
+               loading = None
+            else:  
+               print("zx2")
+               sgf = 1
+               QTimer.singleShot(0, self.show_window)
+>>>>>>> 12f875f05d771e6f8bb11142876ffebaefd8430b
       
 
     

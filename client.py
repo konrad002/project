@@ -411,6 +411,7 @@ class newWindow(QMainWindow):
           self.reset()
                 
                 
+<<<<<<< HEAD
           print(44)
           print(s.getpeername())
           
@@ -418,6 +419,13 @@ class newWindow(QMainWindow):
           thread.start()
           
      def reset(self):
+=======
+                print(44)
+                print(s.getpeername())
+                return
+           
+      def reset(self):
+>>>>>>> 12f875f05d771e6f8bb11142876ffebaefd8430b
           
           self.navbar.clear() 
           self.navbar.addMenu(username_input)
