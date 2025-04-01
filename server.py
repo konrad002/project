@@ -32,11 +32,12 @@ class Window(QWidget):
     def __init__(self):
      
       super().__init__()
-      global client_username
+      
+      global client_username, sgf
       self.reconnecting = False
       self.client_socket = None
       client_username = None
-
+      sgf = None
       self.thread = threading.Thread(target=self.connect, daemon = True)
       self.thread.start()
       self.active_windows = []
@@ -103,7 +104,7 @@ class Window(QWidget):
     def get_username(self):
          
          global username, s, client_username, loading, total_users, state0
-         print(self.thread.is_alive())
+         print(self.thread.is_alive(), 3)
          
          if(os.path.exists("temp-server.json")):
             
@@ -153,11 +154,12 @@ class Window(QWidget):
     def something(self):
          global isReady
          isReady = False  
-         if(False):
-            self.thread = threading.Thread(target=self.connect, daemon = True)
-            self.thread.start()
-
+         
+         
+         
          while(isReady == False):
+            
+
             print(isReady, "fhiasge")        
             
             label4 = QMessageBox()
@@ -168,9 +170,12 @@ class Window(QWidget):
             QTimer.singleShot(2000, label4.close)
                               
             label4.exec_()
+            if(self.thread.is_alive() == False):
+              print("running connect")
+              self.thread = threading.Thread(target=self.connect, daemon = True)
+              self.thread.start()
             print(self.thread.is_alive)
             
-
       
          
             
@@ -183,7 +188,7 @@ class Window(QWidget):
       print("are we here?")
           
       
-      global s, conn, addr, client_username, username, total_users, isReady
+      global s, conn, addr, client_username, username, total_users, isReady, navbar, sgf, loading
       
       try:
           s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
@@ -203,9 +208,10 @@ class Window(QWidget):
       
 
       print("connected now")
+      while(state0 == False and self.reconnecting == True):
+           pass
       
-      
-      if(os.path.exists("temp-server.json") and state0 == True):
+      if(os.path.exists("temp-server.json")):
                   
              
             print("//??")
@@ -220,18 +226,34 @@ class Window(QWidget):
                   print("?")
                         
                   isReady = True
-                        
-                  QTimer.singleShot(0, self.show_window)
+                  if(sgf != None):
+                       print("xz")
+                       navbar.clear()
+                       navbar.addMenu(username)
+                       loading = None
+                  else:  
+                    print("zx2")
+                    sgf = 1
+                    QTimer.singleShot(0, self.show_window)
                         
                         
                         
                   
                         
       elif(os.path.exists("temp-server.json") == False):
+            isReady = True
             print("fsf")
             pastConnections["server"] = username
             pastConnections["client"] = client_username
-            QTimer.singleShot(0, self.show_window)
+            if(sgf != None):
+               print("xz")
+               navbar.clear()
+               navbar.addMenu(username)
+               loading = None
+            else:  
+               print("zx2")
+               sgf = 1
+               QTimer.singleShot(0, self.show_window)
       
 
     def if_connected(self):
@@ -251,7 +273,7 @@ class Window(QWidget):
 
       
             
-
+    
     def show_window(self):
          print("was this even run?")
          self.close()
@@ -279,16 +301,17 @@ class newWindow(QMainWindow):
             print("here")
             self.resize(1000,1000)
             self.setWindowTitle("Server app")
-            self.navbar = self.menuBar()
+            global navbar
+            navbar = self.menuBar()
             
             
             
-            self.navbar.addMenu(username)
+            navbar.addMenu(username)
 
             
             
             r = ""
-            self.status = self.navbar.addMenu(r)
+            self.status = navbar.addMenu(r)
             self.status.setStyleSheet("QMenuBar::indicator {color: red;}")
             
             self.new_signal.connect(self.update_label)
@@ -323,13 +346,14 @@ class newWindow(QMainWindow):
             
       def call_window(self):
            self.instance.connect()
-
+      
       def closeEvent(self, event):
            print("z2")
            self.parse_temp()  
            event.accept()
 
       
+
             
       
       
@@ -363,7 +387,7 @@ class newWindow(QMainWindow):
                               self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                         
                               self.client.addWidget(self.label)
-            else:
+            elif(loading == True):
                  for user, username, msg, time in messagesSent:
                         
                   
@@ -385,7 +409,9 @@ class newWindow(QMainWindow):
                         
                               self.client.addWidget(self.label)
                  loading = False
-
+            else:
+                 loading = False
+                 
             
                   
            
@@ -419,6 +445,7 @@ class newWindow(QMainWindow):
                   print(messagesSent)
                   self.message.setText("")
                   self.new_signal.emit(message)
+
             except Exception as e:
                  print(e, "\nthis is the exception from function send()")
 
@@ -432,12 +459,14 @@ class newWindow(QMainWindow):
            reconnected = False
            self.thread = threading.Thread(target=client_socket.call_window, daemon = True)
            self.thread.start()
-           self.navbar.addMenu(r)
+           navbar.addMenu(r)
            
            for k in [1, 2, 4, 8, 12]:
                      time.sleep(k)
-                     print(self.thread.is_alive())
-                     
+                     print(self.thread.is_alive(), 1)
+                     if(isReady):
+                          reconnected = True
+                          break
                      try:
                               
                         print(3)
@@ -531,6 +560,9 @@ class newWindow(QMainWindow):
                              break
                         try:
                               data = conn.recv(1024)
+                              if(not data):
+                                   print("client has disconnected.")
+                                   return
                               print(data, "this is data")
                               print("this has been run")
                         except Exception as e:

@@ -62,14 +62,15 @@ class window(QWidget):
           self.setLayout(self.layout)    
 
     def rr(self):
-         
+         global isReady
          label_username = QMessageBox()
          label_username.setIcon(QMessageBox.Information)
          label_username.setText("Want to relogin to past connection?")
          label_username.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
          r = label_username.exec_()
          if(r == QMessageBox.Ok):
-              self.on_click(False)
+              isReady = False
+              self.on_click()
               return
          elif(r == QMessageBox.Cancel):
               os.remove("temp-client.json")
@@ -80,12 +81,12 @@ class window(QWidget):
     
     def run_app(self):
           self.close()
-          self.client = newWindow()
+          self.client = newWindow(existing = s)
           self.client.show()
           
-    def on_click(self, isReady):
+    def on_click(self):
         alert = QMessageBox()
-        global s, username_input, client_username, loading, total_users
+        global s, username_input, client_username, loading, total_users, isReady
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
@@ -148,7 +149,7 @@ class window(QWidget):
                          isReady = True
                          
                          s.sendall(b"confirmed")
-                    
+
                     
 
                except Exception:
@@ -201,9 +202,12 @@ class window(QWidget):
      
 class newWindow(QMainWindow):
       new_signal = pyqtSignal(str)
-      def __init__(self):
+      def __init__(self, existing):
             
             super().__init__()
+            s = existing
+            
+            print(s)
             self.handler = False
             self.resize(1000,1000)
             self.setWindowTitle("Client app")
@@ -221,8 +225,8 @@ class newWindow(QMainWindow):
             thread = threading.Thread(target=self.receive, daemon = True)
             thread.start()
 
-            central = QWidget()
-            self.setCentralWidget(central)
+            self.central = QWidget()
+            self.setCentralWidget(self.central)
             self.client = QVBoxLayout()
             self.message = QLineEdit(self)
             self.message.setGeometry(100, 500, 500, 100)
@@ -239,7 +243,7 @@ class newWindow(QMainWindow):
             keyboard.on_press_key("Enter", lambda _: self.send(self.message.text()))
 
             self.new_signal.emit("far")
-            central.setLayout(self.client)
+            self.central.setLayout(self.client)
 
       def closeEvent(self, event):
            print("z2")
@@ -344,6 +348,9 @@ class newWindow(QMainWindow):
         
         try:
           data = json.dumps(sending)
+          if(not data):
+               print("no data in sending")
+               return
           s.sendall(data.encode("utf-8"))
           print("sent from client")
         except Exception as e:
@@ -370,24 +377,40 @@ class newWindow(QMainWindow):
                      time.sleep(k)
                      
                      
+                     
                      try:
                          print(1)
                          s.connect((HOST, 12345))
                          print(2)
-                         s.sendall(b"confirmed")
-                         print(3)
-                         reconnected = True                                                                                                
-                         break
+                         ready = s.recv(1024).decode()
+                         print("f2")
+                         if(ready == "ready"):
+                              s.sendall(b"confirmed")
+                              reconnected = True                                                                                                
+                              break
+                         
                         
                               
                      except:
                          print("exception")
                      
                 print("done")
-                if(not reconnected):
+                print(reconnected)
+                if(reconnected == False):
                      exit()
                      
                 loading = True
+                
+                print(s.getpeername())
+                print(11)
+                self.reset()
+                
+                
+                print(44)
+                print(s.getpeername())
+      def reset(self):
+          self.navbar.clear() 
+          self.navbar.addMenu(username_input)
 
       def parse_temp(self):
            with open('temp-client.json', 'w') as output:
@@ -438,18 +461,21 @@ class newWindow(QMainWindow):
         while True:
             
             ready, _, _ = select.select([s], [], [], 0.5)
-            print(ready)
+            print(ready, "this is ready!")
             
             if(ready):
                 
                      
                 try:
+                    print("fsfg")
                     data = s.recv(1024)
                     print(data)
-                    if(data.decode("utf-8") == "ready"):
-                         print("ready was sent from server!")
-                         pass
+                    print(f"[CLIENT RAW DATA]: {repr(data)}")
+                    if(data == ""):
+                         print("server has disconnected")
+                         return
                     else:
+                         print("f")
                          message = json.loads(data.decode("utf-8"))
                          print(message)
                          user = message["user"]
@@ -461,13 +487,14 @@ class newWindow(QMainWindow):
                          print(messagesSent)
                          self.new_signal.emit(message_received)     
                 except Exception as e:
+                     
                      print(e)
                      disconnected_from_receive = True
                      print("z?")
                      QTimer.singleShot(0, self.parse_temp)
                      QTimer.singleShot(0, self.disconnections)
                      
-                     break
+                     return
                 
                
                 
