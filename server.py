@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 import os
 import time
-import sys
+
 
 hostname = str(socket.gethostname())
 HOST = socket.gethostbyname(hostname)
@@ -23,40 +23,40 @@ disconnected_from_receive = False
 disconnected = False
 total_users = 0   
 state0 = False               
-          
+check_state = None          
                   
             
 
 
 class Window(QWidget):
-    def __init__(self):
-     
-      super().__init__()
+      def __init__(self):
+
+            super().__init__()
       
-      global client_username, sgf
-      self.reconnecting = False
-      self.client_socket = None
-      client_username = None
-      sgf = None
-      self.thread = threading.Thread(target=self.connect, daemon = True)
-      self.thread.start()
-      self.active_windows = []
+            global client_username, check_state
+            self.reconnecting = False
+            self.client_socket = None
+            client_username = None
+            check_state = None
+            self.thread = threading.Thread(target=self.connect, daemon = True)
+            self.thread.start()
+            self.active_windows = []
       
       
-      self.get_username()
+            self.get_username()
       
       
 
-      if(os.path.exists("temp-server.json")):
-            self.reconnecting = True
-            self.close()
+            if(os.path.exists("temp-server.json")):
+                  self.reconnecting = True
+                  self.close()
             
-      if(not self.reconnecting):
-           self.ui_window()
+            if(not self.reconnecting):
+                  self.ui_window()
 
       
 
-    def ui_window(self):
+      def ui_window(self):
             self.resize(1000, 1000)
             self.setWindowTitle("Please wait for connection")
       
@@ -89,117 +89,133 @@ class Window(QWidget):
             print("fas2")
             self.setLayout(self.layout)
 
-    def set_username(self):  
-         global username
-         alert = QMessageBox()
-         username, ok = QInputDialog.getText(self, "Enter your username", "Please enter your username")
-         if(ok and username != ""):
-            print(username)
-            pass
-         elif(ok and username == ""):
-            alert.setText("Please enter a username")
-            alert.exec_()
-            self.set_username()
+      def set_username(self):  
+            global username
+            alert = QMessageBox()
+            username, ok = QInputDialog.getText(self, "Enter your username", "Please enter your username")
+            if(ok and username != ""):
+                  print(username)
+                  pass
+            elif(ok and username == ""):
+                  alert.setText("Please enter a username")
+                  alert.exec_()
+                  self.set_username()
             
-    def get_username(self):
+      def get_username(self):
          
-         global username, s, client_username, loading, total_users, state0
-         print(self.thread.is_alive(), 3)
+            global username, s, client_username, loading, total_users, state0
+            print(self.thread.is_alive(), 3)
          
-         if(os.path.exists("temp-server.json")):
+            if(os.path.exists("temp-server.json")):
             
-            label_username = QMessageBox()
-            label_username.setIcon(QMessageBox.Information)
-            label_username.setText("Want to relogin to past connection? 2")
-            label_username.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            r = label_username.exec_()
-            if(r == QMessageBox.Ok):
+                  label_username = QMessageBox()
+                  label_username.setIcon(QMessageBox.Information)
+                  label_username.setText("Want to relogin to past connection? 2")
+                  label_username.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                  r = label_username.exec_()
+                  if(r == QMessageBox.Ok):
                    
-                   with open('temp-server.json', 'r') as output:
-                        r = json.load(output)
-                        print(r)
-                        client_username = r[0]["client_user"]
-                        username = r[0]["server_user"] 
-                        total_users = r[1]["total_users"]
-                        f = r[2:len(r)]
-                        for k in f:
+                        with open('temp-server.json', 'r') as output:
+                              r = json.load(output)
+                              print(r)
+                              client_username = r[0]["client_user"]
+                              username = r[0]["server_user"] 
+                              print(username, "this is username at line 123")
+                              total_users = r[1]["total_users"]
+                              f = r[2:len(r)]
+                              for k in f:
                               
-                              messagesSent.append((k["user"], k["username"], k["message"], k["time"]))
-                        print(r)
+                                    messagesSent.append((k["user"], k["username"], k["message"], k["time"]))
+                              print(r)
                         
-                        loading = True
+                              loading = True
                         
-                        print("run?")
-                        print(messagesSent)
-                        output.close()
+                              print("run?")
+                              print(messagesSent)
+                              output.close()
+                              state0 = True
+                        print("surely this gets printed out no?")
                    
-                   print("surely this gets printed out no?")
-                   state0 = True
-                   self.something()
+                        self.something()
 
                              
-            elif(r == QMessageBox.Cancel):
-                 os.remove("temp-server.json")
+                  elif(r == QMessageBox.Cancel):
+                        os.remove("temp-server.json")
                  
-                 self.set_username()
-            else:
-                 pass
+                        self.set_username()
+                  else:
+                        pass
          
-         else:
-            self.set_username()
+            else:
+                  self.set_username()
               
          
          
             
-    def something(self):
-         global isReady
-         isReady = False  
+      def something(self):
+            global isReady
+            isReady = False  
          
          
          
-         while(isReady == False):
+            while(isReady == False):
             
 
-            print(isReady, "fhiasge")        
+                  print(isReady, "fhiasge")        
             
-            label4 = QMessageBox()
-            label4.setText("Waiting to reconnect... ")
-            label4.setStyleSheet("")
+                  label4 = QMessageBox()
+                  label4.setText("Waiting to reconnect... ")
+                  label4.setStyleSheet("")
                              
-            label4.setWindowTitle(username + " " + "relogin?")
-            QTimer.singleShot(2000, label4.close)
+                  label4.setWindowTitle(username + " " + "relogin?")
+                  QTimer.singleShot(2000, label4.close)
                               
-            label4.exec_()
-            if(self.thread.is_alive() == False):
-              print("running connect")
-              self.thread = threading.Thread(target=self.connect, daemon = True)
-              self.thread.start()
-            print(self.thread.is_alive)
+                  label4.exec_()
+                  if(conn != None):
+                        print("there is already a connection")
+                        isReady = True
+                        return
+                  if(self.thread.is_alive() == False):
+                        print("running connect")
+                        self.thread = threading.Thread(target=self.connect, daemon = True)
+                        self.thread.start()
+                  
+                  print(self.thread.is_alive)
             
       
          
             
             
-    
-    def connect(self):
-      
-      count = 0
-      print("are we even here?")
-      print("are we here?")
+      def reuse(self):
+            global loading, check_state
+            if(check_state != None):
+                  print("xz")
+                  navbar.clear()
+                  navbar.addMenu(username)
+                  loading = None
+            else:  
+                  print("zx2")
+                  check_state = 1
+                  QTimer.singleShot(0, self.show_window)
+      def connect(self):
+            global s, conn, addr, client_username, username, total_users, isReady, sgf, loading
+            count = 0
+            print("are we even here?")
+            print("are we here?")
           
       
-      global s, conn, addr, client_username, username, total_users, isReady, navbar, sgf, loading
+            
       
-      try:
-          s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
-          s.bind((HOST, PORT))
-          s.listen(1)
-          conn, addr = s.accept()
-      except Exception as e:
-           print("j")
-           print(e)
-           exit()     
-           sys.exit(1)
+            try:
+                  s = socket.socket(socket.AF_INET,  socket.SOCK_STREAM)
+                  s.bind((HOST, PORT))
+                  s.listen(1)
+                  conn, addr = s.accept()
+            except Exception as e:
+                  print("j")
+                  print(e)
+                  exit()     
+                  
       
       
                   
@@ -207,120 +223,90 @@ class Window(QWidget):
             
       
 
-      print("connected now")
-      while(state0 == False and self.reconnecting == True):
-           pass
+            print("connected now")
+            while(state0 == False and self.reconnecting == True):
+                  pass
       
-      if(os.path.exists("temp-server.json")):
+            if(os.path.exists("temp-server.json")):
                   
              
-            print("//??")
-            conn.sendall(b"ready")
-            print("s")
-            confirm = conn.recv(1024).decode()
-            print(confirm, "this is confirm")
-            if(confirm == "confirmed"):
+                  print("//??")
+                  conn.sendall(b"ready")
+                  print("s")
+                  confirm = conn.recv(1024).decode()
+                  print(confirm, "this is confirm")
+                  if(confirm == "confirmed"):
+                        z = True
+                        while(z):
+                              try: 
+                                    pastConnections["client"] = client_username     
+                                    pastConnections["server"] = username
+                         
+                                    z = False
+                                    print("username and client username have both been defined")
+                              except:
+                                    pass
+                        isReady = True
+                        self.reuse()
                         
+                        
+                        
+                  
+                        
+            elif(os.path.exists("temp-server.json") == False):
+                  isReady = True
+                  print("fsf")
                   pastConnections["server"] = username
                   pastConnections["client"] = client_username
-                  print("?")
-                        
-                  isReady = True
-                  if(sgf != None):
-                       print("xz")
-                       navbar.clear()
-                       navbar.addMenu(username)
-                       loading = None
-                  else:  
-                    print("zx2")
-                    sgf = 1
-                    QTimer.singleShot(0, self.show_window)
-                        
-                        
-                        
-                  
-                        
-      elif(os.path.exists("temp-server.json") == False):
-            isReady = True
-            print("fsf")
-            pastConnections["server"] = username
-            pastConnections["client"] = client_username
-            if(sgf != None):
-               print("xz")
-               navbar.clear()
-               navbar.addMenu(username)
-               loading = None
-            else:  
-               print("zx2")
-               sgf = 1
-               QTimer.singleShot(0, self.show_window)
+                  self.reuse()
       
 
-    def if_connected(self):
-         try:
-              s.getpeername()
-              return True
-         except:
-              return False
-         
     
+      def show_window(self):
+            global client_socket
+            print("was this even run?")
+            self.close()
+            self.client_socket = newWindow(self)
+            self.client_socket.show()
+            self.active_windows.append(self)
             
-      
-                  
-                  
-                  
+            client_socket = self.client_socket
+            print("connected to", addr)
+            print(pastConnections, "line 163")
+            print(self.active_windows)
             
-
-      
-            
-    
-    def show_window(self):
-         print("was this even run?")
-         self.close()
-         self.client_socket = newWindow(self)
-         self.client_socket.show()
-         self.active_windows.append(self)
-         global client_socket
-         client_socket = self.client_socket
-         print("connected to", addr)
-         print(pastConnections, "line 163")
-         print(self.active_windows)
-         for i in self.active_windows:
-              if(self.if_connected == False):
-                   print("here now")
-                   self.close()    
     
               
 class newWindow(QMainWindow):
       
       new_signal = pyqtSignal(str)  
       def __init__(self, instance):
+            global r, navbar
             super().__init__()
-            self.instance = instance
-            
-            print("here")
-            self.resize(1000,1000)
-            self.setWindowTitle("Server app")
-            global navbar
-            navbar = self.menuBar()
-            
-            
-            
-            navbar.addMenu(username)
-
-            
             
             r = ""
-            self.status = navbar.addMenu(r)
-            self.status.setStyleSheet("QMenuBar::indicator {color: red;}")
+            self.instance = instance
             
             self.new_signal.connect(self.update_label)
             
             thread2 = threading.Thread(target= self.receive, daemon = True)
             thread2.start() 
 
-           
+            self.ui_newWindow()
 
+            
+            
+                  
+            
+      def ui_newWindow(self):
+            global navbar
+            self.resize(1000,1000)
+            self.setWindowTitle("Server app")
+            navbar = self.menuBar()
+            navbar.addMenu(username)
+
+            self.status = navbar.addMenu(r)
+            self.status.setStyleSheet("QMenuBar::indicator {color: red;}")
             central = QWidget()
             self.setCentralWidget(central)
             self.client = QVBoxLayout()
@@ -342,15 +328,14 @@ class newWindow(QMainWindow):
             self.new_signal.emit("fa")
             
                   
-            central.setLayout(self.client)
-            
+            central.setLayout(self.client)           
       def call_window(self):
-           self.instance.connect()
+            self.instance.connect()
       
       def closeEvent(self, event):
-           print("z2")
-           self.parse_temp()  
-           event.accept()
+            print("z2")
+            self.parse_temp()  
+            event.accept()
 
       
 
@@ -388,11 +373,8 @@ class newWindow(QMainWindow):
                         
                               self.client.addWidget(self.label)
             elif(loading == True):
-                 for user, username, msg, time in messagesSent:
-                        
+                  for user, username, msg, time in messagesSent:
                   
-            
-                        
                         if(user == "server"):
                               print("run?, how many times?")
                         
@@ -408,9 +390,9 @@ class newWindow(QMainWindow):
                               self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                         
                               self.client.addWidget(self.label)
-                 loading = False
+                  loading = False
             else:
-                 loading = False
+                  loading = False
                  
             
                   
@@ -418,6 +400,7 @@ class newWindow(QMainWindow):
             
 
       def send(self, message):
+            global timeSent
             if(message == ""):
                   return
             print(len(messagesSent))
@@ -428,7 +411,7 @@ class newWindow(QMainWindow):
                   self.message.setText("")
                   return
             
-            global timeSent
+            
             timeSent = datetime.now().strftime("%H:%M")
             messagesSent.append(("server", username, message, timeSent))
             sending = {
@@ -439,102 +422,102 @@ class newWindow(QMainWindow):
             }
 
             print(timeSent)
-            try:
-                  data = json.dumps(sending)
-                  conn.sendall(data.encode("utf-8"))
-                  print(messagesSent)
-                  self.message.setText("")
-                  self.new_signal.emit(message)
+            
+            data = json.dumps(sending)
+            print(data, "this is data yet again")
+            conn.sendall(data.encode("utf-8"))
+            print(messagesSent)
+            self.message.setText("")
+            self.new_signal.emit(message)
 
-            except Exception as e:
-                 print(e, "\nthis is the exception from function send()")
+            
 
       def disconnections(self):
            
-           global r, loading
-           print("disconnections called how many times?")
+            global r, loading, navbar
+            print("disconnections called how many times?")
            
-           r = "Client has disconnected. Attempting to reconnect."
+            r = "Client has disconnected. Attempting to reconnect."
 
-           reconnected = False
-           self.thread = threading.Thread(target=client_socket.call_window, daemon = True)
-           self.thread.start()
-           navbar.addMenu(r)
+            reconnected = False
+            self.thread = threading.Thread(target=client_socket.call_window, daemon = True)
+            self.thread.start()
+            navbar.addMenu(r)
            
-           for k in [1, 2, 4, 8, 12]:
-                     time.sleep(k)
-                     print(self.thread.is_alive(), 1)
-                     if(isReady):
-                          reconnected = True
-                          break
-                     try:
-                              
+            for k in [1, 2, 4, 8, 12]:
+                  time.sleep(k)
+                  print(self.thread.is_alive(), 1)
+                  if(isReady):
+                        reconnected = True
+                        break
+                  try:
+
                         print(3)
                         conn.sendall(b"ready")
                         print(4)
                         reconnected = True
                         break
                               
-                     except:
+                  except:
                         print("exception")
 
-           if(not reconnected):
-                exit()
+            if(not reconnected):
+                  exit()
                     
                
            
                      
                 
-           print("done")
-           loading = True
+            print("done")
+            loading = True
 
       def parse_temp(self):
                 
-           with open('temp-server.json', 'w') as output:
-            if(os.path.getsize("temp-server.json")):
-                  os.remove("temp-server.json")
-                  output.close()
+            with open('temp-server.json', 'w') as output:
+                  if(os.path.getsize("temp-server.json")):
+                        os.remove("temp-server.json")
+                        output.close()
            
                  
-            else:
+                  else:
                   
                   
                   
-                  message_list = []
-                  sending = {
-                       "client_user": client_username,
-                       "server_user" : username
-                  }
-                  pastConnections["client"] = sending["client_user"]
-                  pastConnections["server"] = sending["server_user"]
-                  message_list.append(sending)
-                  sending = {
-                       "total_users" : total_users
-                  }
-                  message_list.append(sending)
-                  for something in messagesSent:
-                                          
+                        message_list = []
                         sending = {
-                         "user" : something[0],
-                         "username" : something[1],
-                         "message" : something[2],
-                         "time" : something[3]
-                         }
+                              "client_user": client_username,
+                              "server_user" : username
+                        }
+                        pastConnections["client"] = sending["client_user"]
+                        pastConnections["server"] = sending["server_user"]
                         message_list.append(sending)
-                  print(message_list)
-                  if(message_list == []):
-                       
-                       output.close()
-                       
-                       os.remove("temp-server.json")
-                       
-                       exit()
-                  print("when does this get run?")
-                  json.dump(message_list, output, indent=4)
+                        sending = {
+                              "total_users" : total_users
+                        }
+                        message_list.append(sending)
+                        for something in messagesSent:
                                           
-                  print(sending)
+                              sending = {
+                                    "user" : something[0],
+                                    "username" : something[1],
+                                    "message" : something[2],
+                                    "time" : something[3]
+                                    }
+                              message_list.append(sending)
+                        print(message_list)
+                        if(message_list == []):
+                       
+                              output.close()
+                       
+                              os.remove("temp-server.json")
+                       
+                              exit()
+                        print("when does this get run?")
+                        json.dump(message_list, output, indent=4)
+                                          
+                        print(sending)
                                          
-                  output.close()
+                        output.close()
 
            
            
