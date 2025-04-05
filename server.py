@@ -339,11 +339,8 @@ class newWindow(QMainWindow):
             
             self.button7.setStyleSheet("border-radius: 10px;")
             keyboard.on_press_key("Enter", lambda _: self.send(self.message.text()))
-<<<<<<< HEAD
             central.setLayout(self.client)
 
-=======
->>>>>>> testing
             
             self.new_signal.emit("fa")
             
