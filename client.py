@@ -222,25 +222,28 @@ class sidebarWindow(QWidget):
           layout.setAlignment(Qt.AlignTop)
           layout.setSpacing(15)
           #1
-          button = QPushButton()
-          button.setIcon(QIcon("chat.jpg"))
-          button.setIconSize(QSize(50, 50))
-          button.setFixedSize(60, 60)
-          button.setStyleSheet("border: none; background-color: transparent;")
-          layout.addWidget(button)
-          for k in range(4):
-               button = QPushButton(f"Item {k + 1}")
-               button.setFixedSize(60, 60)
-               button.setStyleSheet("""
-                                   border-radius: 30px;
-                                   background-color: #5865F2;
-                                   color: white;
-                                   font-weight: bold;
-                                    """)
-               layout.addWidget(button)
-          self.setStyleSheet("background-color: #121117;")
+          self.button = QPushButton()
+          self.button.setIcon(QIcon("chat.jpg"))
+          self.button.setIconSize(QSize(50, 50))
+          self.button.setFixedSize(60, 60)
+          self.button.setStyleSheet("border: none; background-color: transparent;")
+          
+          layout.addWidget(self.button)
           self.setLayout(layout)
-          self.setFixedWidth(60)
+          self.setFixedWidth(50)
+          #for k in range(4):
+          #     button = QPushButton(f"Item {k + 1}")
+          #     button.setFixedSize(60, 60)
+          #     button.setStyleSheet("""
+          #                         border-radius: 30px;
+          #                         background-color: #5865F2;
+          #                         color: white;
+          #                         font-weight: bold;
+          #                          """)
+          #     layout.addWidget(button)
+          #self.setStyleSheet("background-color: #121117;")
+          #self.setLayout(layout)
+          
           
 
      
@@ -258,14 +261,18 @@ class newWindow(QMainWindow):
 
           self.thread = threading.Thread(target=self.receive, daemon = True)
           self.thread.start()
-          self.sidebar = sidebarWindow() #part of main layout, sidebar
-
-          self.ui_newWindow()
+          self.sidebar = sidebarWindow()
+          self.ui_chatApp() #part of main layout, sidebar
+          
+          
           
           
 
+     def ui_(self):
           
-     def ui_newWindow(self):
+          pass
+          
+     def ui_chatApp(self):
           global navbar
           self.resize(1000,1000)
           self.setWindowTitle("Client app")
@@ -278,7 +285,7 @@ class newWindow(QMainWindow):
           
 
           self.main_layout = QHBoxLayout(self) #main layout
-          self.main_layout.addWidget(self.sidebar)
+          
 
           self.chat_area = QWidget()
           self.chat_area_layout = QVBoxLayout()
@@ -297,7 +304,11 @@ class newWindow(QMainWindow):
           self.message.setPlaceholderText("Type in a message to send")
           self.button7.setGeometry(50, 50, 50, 50)
           self.button7.clicked.connect(lambda: self.send(self.message.text()))
-            
+          self.button = QPushButton()
+          self.button.setIcon(QIcon("chat.jpg"))
+          self.button.setIconSize(QSize(50, 50))
+          self.button.setFixedSize(60, 60)
+          self.button.setStyleSheet("border: none; background-color: transparent;")  
             
           
           
@@ -309,7 +320,7 @@ class newWindow(QMainWindow):
           
           
           self.new_signal.emit("far")
-
+          self.main_layout.addWidget(self.button)
           self.main_layout.addWidget(self.message)
           self.main_layout.addWidget(self.button7)
           self.main_layout.addWidget(self.banner)
