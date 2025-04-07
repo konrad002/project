@@ -29,7 +29,7 @@ class States:
             self.username = ""
             self.isReady = False
             self.client_socket = None 
-            self.Dm = ""
+            
            
             
 
@@ -101,6 +101,7 @@ class Window(QWidget):
             
             alert = QMessageBox()
             self.states.username, ok = QInputDialog.getText(self, "Enter your username", "Please enter your username")
+            
             if(ok and self.states.username != ""):
                   print(self.states.username)
                   pass
@@ -320,8 +321,8 @@ class newWindow(QMainWindow):
             navbar = self.menuBar()
             navbar.addMenu(self.states.username)
 
-            self.status = navbar.addMenu(self.states.Dm)
-            self.status.setStyleSheet("QMenuBar::indicator {color: red;}")
+            
+            navbar.setStyleSheet("color: blue;")
             central = QWidget()
             self.setCentralWidget(central)
             self.client = QVBoxLayout()
@@ -463,14 +464,14 @@ class newWindow(QMainWindow):
             self.states.conn = None
             print("disconnections called how many times?")
            
-            self.states.Dm = "Client has disconnected. Attempting to reconnect."
-            navbar.setStyleSheet("QMenuBar::indicator {color: red;}")
+            
+            
             self.states.isReady = False
             reconnected = False
             
             self.thread = threading.Thread(target=self.states.client_socket.call_window, daemon = True)
             self.thread.start()
-            navbar.addMenu(self.states.Dm)
+            
            
             for k in [1, 2, 4, 8, 12]:
                   time.sleep(k)

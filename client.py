@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import *
 import select
 import threading
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import keyboard
 import json
 from datetime import datetime
@@ -26,7 +27,6 @@ class States:
             self.client_username = ""
             self.isReady = None
             self.username = ""
-            self.r = ""
             self.messagesSent = []
             self.pastConnections = {}
             self.username_input = ""
@@ -213,6 +213,36 @@ class window(QWidget):
 
     
          
+class sidebarWindow(QWidget):
+     def __init__(self):
+          super().__init__()
+          self.ui_sidebarWindow()
+     def ui_sidebarWindow(self):
+          layout = QVBoxLayout()
+          layout.setAlignment(Qt.AlignTop)
+          layout.setSpacing(15)
+          #1
+          button = QPushButton()
+          button.setIcon(QIcon("chat.jpg"))
+          button.setIconSize(QSize(50, 50))
+          button.setFixedSize(60, 60)
+          button.setStyleSheet("border: none; background-color: transparent;")
+          layout.addWidget(button)
+          for k in range(4):
+               button = QPushButton(f"Item {k + 1}")
+               button.setFixedSize(60, 60)
+               button.setStyleSheet("""
+                                   border-radius: 30px;
+                                   background-color: #5865F2;
+                                   color: white;
+                                   font-weight: bold;
+                                    """)
+               layout.addWidget(button)
+          self.setStyleSheet("background-color: #121117;")
+          self.setLayout(layout)
+          self.setFixedWidth(60)
+          
+
      
 class newWindow(QMainWindow):
      new_signal = pyqtSignal(str)
@@ -228,9 +258,10 @@ class newWindow(QMainWindow):
 
           self.thread = threading.Thread(target=self.receive, daemon = True)
           self.thread.start()
-          
+          self.sidebar = sidebarWindow() #part of main layout, sidebar
+
           self.ui_newWindow()
-            
+          
           
 
           
@@ -240,11 +271,26 @@ class newWindow(QMainWindow):
           self.setWindowTitle("Client app")
           navbar = self.menuBar()
           navbar.addMenu(self.states.username_input)
-          self.status = navbar.addMenu(self.states.r)
-          self.status.setStyleSheet("QMenuBar::indicator {color: red;}")
-          self.central = QWidget()
-          self.setCentralWidget(self.central)
-          self.client = QVBoxLayout()
+          navbar.setStyleSheet("color: blue;")
+
+          
+          
+          
+
+          self.main_layout = QHBoxLayout(self) #main layout
+          self.main_layout.addWidget(self.sidebar)
+
+          self.chat_area = QWidget()
+          self.chat_area_layout = QVBoxLayout()
+          self.chat_area.setLayout(self.chat_area_layout)
+          
+          
+          
+          self.scroller = QScrollArea()
+          self.scroller.setWidgetResizable(True)
+          
+          
+          #self.client = QWidget() #part of main layout, client window
           self.message = QLineEdit(self)
           self.message.setGeometry(100, 500, 500, 100)
           self.button7 = QPushButton("Send",self)
@@ -253,14 +299,23 @@ class newWindow(QMainWindow):
           self.button7.clicked.connect(lambda: self.send(self.message.text()))
             
             
-          self.client.addWidget(self.message)
-          self.client.addWidget(self.button7)
-            
+          
+          
+
           self.button7.setStyleSheet("border-radius: 10px;")
           keyboard.on_press_key("Enter", lambda _: self.send(self.message.text()))
-
+          self.banner = QLabel("placeholder")
+          self.banner.hide()
+          
+          
           self.new_signal.emit("far")
-          self.central.setLayout(self.client)
+
+          self.main_layout.addWidget(self.message)
+          self.main_layout.addWidget(self.button7)
+          self.main_layout.addWidget(self.banner)
+          self.main_layout.addWidget(self.chat_area)
+          
+          
 
      def closeEvent(self, event):
           print("z2")
@@ -293,7 +348,7 @@ class newWindow(QMainWindow):
                         
                          self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                         
-                         self.client.addWidget(self.label)
+                         self.main_layout.addWidget(self.label)
                     else:
 
                          print(msg)
@@ -301,7 +356,7 @@ class newWindow(QMainWindow):
                          self.label = QLabel(username + ": "+ msg + " \n  " + time)
                          self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                         
-                         self.client.addWidget(self.label)
+                         self.main_layout.addWidget(self.label)
           else:
                print("fsagetg")
                for user, username, msg, time in self.states.messagesSent:
@@ -313,14 +368,14 @@ class newWindow(QMainWindow):
                         
                          self.label.setStyleSheet("background-color: lightgreen; font-size: 14px; padding: 5px; border-radius: 5px; height: 50px;")
                         
-                         self.client.addWidget(self.label)
+                         self.main_layout.addWidget(self.label)
                     else:
                          print(msg)
                         
                          self.label = QLabel(username + ": "+ msg + " \n  " + time)
                          self.label.setStyleSheet("background-color: lightgray; font-size: 14px; padding: 5px; border-radius: 5px; height: 40px;")
                         
-                         self.client.addWidget(self.label)
+                         self.main_layout.addWidget(self.label)
 
                self.states.loading = False
             
@@ -394,16 +449,17 @@ class newWindow(QMainWindow):
      def disconnections(self):
           self.states.s = None
           print("disconnections called how many times?")
-           
+          
+          
            
           if(self.states.count > 0):
                self.states.count = 0
           else: 
-               self.states.r = "Server has disconnected. Attempting to reconnect."
+               
                self.states.count = self.states.count + 1
           reconnected = False
           self.states.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-          navbar.addMenu(self.states.r)
+          
           for k in [1, 2, 4, 8, 12]:
                time.sleep(k)
                           
@@ -412,6 +468,7 @@ class newWindow(QMainWindow):
                     self.states.s.connect((HOST, 12345))
                     print(2)
                     ready = self.states.s.recv(1024).decode()
+                    
                     print("f2")
                     if(ready == "ready"):
                          self.states.s.sendall(b"confirmed")
@@ -445,6 +502,7 @@ class newWindow(QMainWindow):
           global navbar
           navbar.clear() 
           navbar.addMenu(self.states.username_input)
+          
           
 
      def parse_temp(self):
@@ -486,7 +544,18 @@ class newWindow(QMainWindow):
 
            
                  
-           
+     def change_ui_later(self):
+          self.banner.setAlignment(Qt.AlignCenter)
+          self.banner.setStyleSheet("""
+                                    QLabel{
+                                    background-color: #cc3333;
+                                    color: #ffffff;
+                                    padding: 4px;
+                                    font-weight: bold;
+                                    border-bottom: 0.5px solid #ccc;
+                                    }
+                                    """)
+          self.banner.show()      
      def receive(self):
         
           global data
@@ -520,6 +589,7 @@ class newWindow(QMainWindow):
                               
 
                               QTimer.singleShot(0, self.parse_temp)
+                              QTimer.singleShot(0, self.change_ui_later)
                               QTimer.singleShot(0, self.disconnections)
                               
                               
