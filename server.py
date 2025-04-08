@@ -54,7 +54,7 @@ class Window(QWidget):
       
       
 
-            if(os.path.exists("temp-server.json")):
+            if(os.path.exists("temp/temp-server.json")):
                   self.reconnecting = True
 
             self.get_username()      
@@ -78,7 +78,7 @@ class Window(QWidget):
             self.label17.setFont(QFont('Arial', 20))
       
             self.image = QLabel(self)
-            pixelmap = QPixmap("pic.webp")
+            pixelmap = QPixmap("img/pic.webp")
             self.label19 = QLabel(self)
             self.image.setPixmap(pixelmap)
 
@@ -115,7 +115,7 @@ class Window(QWidget):
             
             print(self.thread.is_alive(), 3)
          
-            if(os.path.exists("temp-server.json")):
+            if(os.path.exists("temp/temp-server.json")):
             
                   label_username = QMessageBox()
                   label_username.setIcon(QMessageBox.Information)
@@ -124,7 +124,7 @@ class Window(QWidget):
                   r = label_username.exec_()
                   if(r == QMessageBox.Ok):
                    
-                        with open('temp-server.json', 'r') as output:
+                        with open('temp/temp-server.json', 'r') as output:
                               r = json.load(output)
                               print(r)
                               self.states.client_username = r[0]["client_user"]
@@ -149,7 +149,7 @@ class Window(QWidget):
 
                              
                   elif(r == QMessageBox.Cancel):
-                        os.remove("temp-server.json")
+                        os.remove("temp/temp-server.json")
                  
                         self.set_username()
                   else:
@@ -241,7 +241,7 @@ class Window(QWidget):
             while(self.states.state0 == False and self.reconnecting == True):
                   pass
             print(self.states.state0, self.reconnecting)
-            if(os.path.exists("temp-server.json")):
+            if(os.path.exists("temp/temp-server.json")):
                   
              
                   print("//??")
@@ -268,7 +268,7 @@ class Window(QWidget):
                         
                   
                         
-            elif(os.path.exists("temp-server.json") == False):
+            elif(os.path.exists("temp/temp-server.json") == False):
                   self.states.isReady = True
                   print("fsf")
                   self.states.pastConnections["server"] = self.states.username
@@ -510,9 +510,9 @@ class newWindow(QMainWindow):
 
       def parse_temp(self):
                 
-            with open('temp-server.json', 'w') as output:
-                  if(os.path.getsize("temp-server.json")):
-                        os.remove("temp-server.json")
+            with open('temp/temp-server.json', 'w') as output:
+                  if(os.path.getsize("temp/temp-server.json")):
+                        os.remove("temp/temp-server.json")
                         output.close()
            
                  
@@ -543,7 +543,7 @@ class newWindow(QMainWindow):
                        
                               output.close()
                        
-                              os.remove("temp-server.json")
+                              os.remove("temp/temp-server.json")
                        
                               exit()
                         print("when does this get run?")
@@ -619,7 +619,7 @@ class newWindow(QMainWindow):
 
 app = QApplication([])
 window = Window()
-if(os.path.exists("temp-server.json")):
+if(os.path.exists("temp/temp-server.json")):
      pass
 else:
      window.show()
