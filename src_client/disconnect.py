@@ -21,6 +21,7 @@ def trying(self):
                self.thread = threading.Thread(target=self.receive, daemon = True)
                self.thread.start()   
                print("jason")
+               
 def disconnections(self):
           self.states.s = None
           print("disconnections called how many times?")

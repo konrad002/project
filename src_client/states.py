@@ -10,6 +10,7 @@ class States:
             self.client_username = ""
             self.isReady = None
             self.username = ""
+            self.client_password = ""
             self.messagesSent = []
             self.pastConnections = {}
             self.username_input = ""

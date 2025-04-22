@@ -64,10 +64,9 @@ class Window(QWidget):
           self.layout.addWidget(self.textbox3)
           self.layout.addWidget(self.label2)
           self.layout.addWidget(self.password)
-          self.hashed = bcrypt.hashpw(self.password.text().encode("utf-8"), bcrypt.gensalt())
-          self.states.server_password = self.hashed.decode()
-          print(self.states.server_password)
           self.layout.addWidget(self.button)
+
+          
           #keyboard.on_press_key("Enter", lambda _: self.on_click()) //use later
           self.button.clicked.connect(self.on_click)
           print("jk")
@@ -84,6 +83,9 @@ class Window(QWidget):
                
                #if(bcrypt.checkpw(self.states.something, self.states.server_password) == False): #TODO
                #   raise Exception("Incorrect password")
+            self.hashed = bcrypt.hashpw(self.password.text().encode("utf-8"), bcrypt.gensalt())
+            self.states.server_password = self.hashed.decode()
+            print(self.states.server_password)
             try:
                   self.states.username = self.textbox3.text()
                   
@@ -133,34 +135,35 @@ class Window(QWidget):
             label_username.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             r = label_username.exec_()
             if(r == QMessageBox.Ok):
-                   
+                  self.something() 
                   with open('temp/temp-server.json', 'r') as output:
                         r = json.load(output)
                         print(r)
                         self.states.client_username = r[0]["client_user"]
                         self.states.username = r[0]["server_user"] 
 
-                        self.states.client_password = r[0]["client_password"].decode()
-                        self.states.server_password = r[0]["server_password"].decode()
+                        self.states.client_password = r[1]["client_password"]
+                        self.states.server_password = r[1]["server_password"]
                         
                         #if(bcrypt.checkpw(self.states.something, self.states.password) == False): #TODO
                         #      raise Exception("Incorrect password")
                               
-                        f = r[1:len(r)]
+                        f = r[2:len(r)]
                         for k in f:
                               
                               self.states.messagesSent.append((k["user"], k["username"], k["message"], k["time"]))
                         print(r)
                         
                         self.states.loading = True
-                        
+                        f = str(r)
+                        self.states.conn.sendall(f.encode("utf-8"))
                         print("run?")
                         print(self.states.messagesSent)
                         output.close()
                         self.states.state0 = True
                   print("surely this gets printed out no?")
                    
-                  self.something()
+                  
 
                              
             elif(r == QMessageBox.Cancel):
@@ -190,7 +193,7 @@ class Window(QWidget):
                   label4.setText("Waiting to reconnect... ")
                   label4.setStyleSheet("")
                         
-                  label4.setWindowTitle(self.username.text() + " " + "relogin?")
+                  label4.setWindowTitle(self.states.username + " " + "relogin?")
                   QTimer.singleShot(2000, label4.close)
                               
                   label4.exec_()
@@ -220,7 +223,7 @@ class Window(QWidget):
                         self.states.isReady = True
                         
                         
-                        return
+                        
                   if(self.thread.is_alive() == False):
                         print("running connect")
                         self.thread = threading.Thread(target=self.connect, daemon = True)
@@ -311,8 +314,10 @@ class Window(QWidget):
                   print("fsf")
                   j = self.states.conn.recv(1024).decode()
                   print(j, "this is meant to be the username line 314")
+                  index = j.find("$")
                   for k in j:
-                        index = k.find("$")
+                        
+                        print(index, "this is the index")
                         if(k == "$"):
                               self.states.client_password = j[index:]
                               break

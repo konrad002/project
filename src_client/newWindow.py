@@ -9,9 +9,11 @@ import json
 from datetime import datetime
 import os
 import time
-from src_client.ui import ui_chatApp
+
 from src_client.states import *
-from src_client.network import receive
+from src_client.ui import ui_chatApp
+from src_client.disconnect import parse_temp, disconnections
+
 class newWindow(QMainWindow):
      new_signal = pyqtSignal(str)
      def __init__(self):
@@ -24,12 +26,12 @@ class newWindow(QMainWindow):
           
           self.new_signal.connect(self.update_label)
 
-          self.thread = threading.Thread(target=receive, daemon = True)
+          self.thread = threading.Thread(target=self.receive, daemon = True)
           self.thread.start()
           #self.sidebar = sidebarWindow()
-          self.ui_chatApp() #part of main layout, sidebar
-          
+           #part of main layout, sidebar
           ui_chatApp(self)
+          
           
           
 
@@ -43,7 +45,7 @@ class newWindow(QMainWindow):
 
      def closeEvent(self, event):
           print("z2")
-          self.parse_temp()  
+          parse_temp(self)
           event.accept()     
 
             
@@ -115,3 +117,55 @@ class newWindow(QMainWindow):
                                     """)
           self.banner.show()      
      
+     def receive(self):
+        
+          
+          while True:
+                  
+
+                  ready, _, _ = select.select([self.states.s], [], [], 0.5)
+                  
+
+                  print(ready, "this is ready")
+                        
+                  if(ready):
+                        
+                        try:
+                              
+                                   
+                              data = self.states.s.recv(1024)
+                              if(not data):
+                                   print("server has disconnected.")
+                                   return
+                              print(data, "this is data")
+                             
+                              print("connection closed")
+                                   
+                             
+                             
+                        except Exception as e:
+                              print(e)
+                              print("z?")
+                              print(e)
+                              
+
+                              parse_temp(self)
+                              QTimer.singleShot(0, self.change_ui_later)
+                              disconnections(self)
+                              
+                              
+                              
+                              break
+                        print(data)
+                        
+                        
+                        message = json.loads(data.decode("utf-8"))
+                        print(message)
+                        user = message["user"]
+                        self.states.username = message["username"]
+                        message_received = message["message"]
+                        timeSent2 = message["time"]
+                        self.states.messagesSent.append((user, self.states.username, message_received, timeSent2))
+                        print(self.states.messagesSent)
+                        self.new_signal.emit(message_received)
+                        print("what about this?")

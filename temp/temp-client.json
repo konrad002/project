@@ -4,10 +4,6 @@
         "server_user": ""
     },
     {
-        "client_password": "",
-        "server_password": ""
-    },
-    {
         "user": "client",
         "username": "",
         "message": "f",

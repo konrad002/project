@@ -6,10 +6,10 @@ from PyQt5.QtGui import *
 import json
 from datetime import datetime
 import os
-
+import bcrypt
 from src_client.states import *
-from src_client.ui import ui_window, run_app
-
+from src_client.ui import ui_window, ui_chatApp
+from src_client.newWindow import newWindow
 from src_client.network import relogin
 
 class Window(QWidget):
@@ -30,7 +30,8 @@ class Window(QWidget):
           if(self.reconnecting == False):
                ui_window(self)
                print(self.reconnecting, "this is self.reconnecting")
-          self.on_click()
+
+          
      
 
      def rr(self):
@@ -43,7 +44,6 @@ class Window(QWidget):
           if(r == QMessageBox.Ok):
                self.states.isReady = False
                self.on_click()
-               return
           elif(r == QMessageBox.Cancel):
                os.remove("temp/temp-client.json")
                exit()
@@ -64,37 +64,53 @@ class Window(QWidget):
           if(self.states.client != None):
                print("does this get run?")
                exit()
-                        
-        
-        
-    
-          relogin(self)
+          if(os.path.exists("temp/temp-client.json")):
 
-          try:
+               relogin(self)
+          else:
+               self.hashed = bcrypt.hashpw(self.password.text().encode("utf-8"), bcrypt.gensalt())
+               self.states.client_password = self.hashed.decode()
+               print(self.states.client_password)
+          
+
+               try:
             
-               print("???")
+                    print("???")
             
-               self.states.s.connect((self.textbox1.text(), int(self.textbox2.text())))
+                    self.states.s.connect((self.states.HOST, 12345))
             
                
-               print(self.states.pastConnections)
-               self.states.username_input = self.textbox3.text()
-               self.states.pastConnections["user"] = "client"
-               self.states.pastConnections["client"] = self.states.username_input
-               self.states.pastConnections["server"] = self.states.client_username
+                    print(self.states.pastConnections)
+                    print(16)
+                    self.states.username_input = self.textbox3.text()
+                    print(15)
+                    sending = self.states.username_input + self.states.client_password
+                    self.states.s.sendall(sending.encode("utf-8"))
+                    print(17)
+                    self.states.pastConnections["user"] = "client"
+                    self.states.pastConnections["client"] = self.states.username_input
+                    print(19)
+                    self.states.pastConnections["server"] = self.states.client_username
+                    print(18)
                
-               if(self.states.username_input == self.states.client_username):
-                    print("client and server username's are the same!!!!")
-               run_app(self)
-               print("connected to server")
+                    self.close()
+                    print(1)
+                    self.client = newWindow()
+                    print(2)
+               
+                    print(3)
+                    self.client.show()
+               
+                    print(4)
+                    print("connected to server")
             
 
-          except Exception:
-               alert.setText("Wrong IP or port number! ")
-               alert.setWindowTitle("Error")
-               alert.setIcon(QMessageBox.Icon.Warning)
-               alert.setStandardButtons(QMessageBox.StandardButton.Ok)
-               alert.exec_()
+               except Exception:
+                    alert.setText("Wrong IP or port number! ")
+                    alert.setWindowTitle("Error")
+                    alert.setIcon(QMessageBox.Icon.Warning)
+                    alert.setStandardButtons(QMessageBox.StandardButton.Ok)
+                    alert.exec_()
             
           
      
