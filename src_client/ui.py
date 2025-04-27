@@ -92,9 +92,9 @@ def ui_chatApp(self):
           
           self.resize(1000,1000)
           self.setWindowTitle("Client app")
-          navbar = self.menuBar()
-          navbar.addMenu(self.states.username_input)
-          navbar.setStyleSheet("color: blue;")
+          self.states.navbar = self.menuBar()
+          self.states.navbar.addMenu(self.states.username_input)
+          self.states.navbar.setStyleSheet("color: blue;")
 
           
           

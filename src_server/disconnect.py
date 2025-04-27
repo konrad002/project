@@ -46,7 +46,7 @@ def disconnections(self):
 
             if(not reconnected):
                   print("7")
-                  exit()
+                  QApplication.instance().quit()
             print(reconnected)          
             reconnected = False  
             

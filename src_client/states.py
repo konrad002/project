@@ -15,6 +15,6 @@ class States:
             self.pastConnections = {}
             self.username_input = ""
             self.count = 0
-            
+            self.navbar = None
 
 states = States()

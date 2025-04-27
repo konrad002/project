@@ -6,21 +6,17 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 import json
-
+import sys
 import os
 import time
 
 from src_client.states import *
 
 
-def trying(self):
-          print("jason 2")
-          print(self.thread.is_alive)
-          if(self.thread.is_alive() == False):
-               print(self.states.s)
-               self.thread = threading.Thread(target=self.receive, daemon = True)
-               self.thread.start()   
-               print("jason")
+
+          
+
+
                
 def disconnections(self):
           self.states.s = None
@@ -59,25 +55,30 @@ def disconnections(self):
           print("done")
           print(reconnected)
           if(reconnected == False):
-               exit()
+               QApplication.instance().quit()
                      
           self.states.loading = False
           self.states.state1 = True
           print(self.states.s.getpeername())
           print(11)
-          self.reset()
+          self.states.navbar.clear() 
+          self.states.navbar.addMenu(self.states.username_input)
                 
                 
           print(44)
           print(self.states.s.getpeername())
           
-          self.trying()
+          print("jason 2")
+          print(self.thread.is_alive)
+          if(self.thread.is_alive() == False):
+               print(self.states.s)
+               self.thread = threading.Thread(target=self.receive, daemon = True)
+               self.thread.start()   
+               print("jason")
+          
           print(self.thread.is_alive)
           
-def reset(self):
-          global navbar
-          navbar.clear() 
-          navbar.addMenu(self.states.username_input)
+
           
           
 
